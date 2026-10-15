@@ -1,6 +1,8 @@
 package io.github.maximus5.ffnotifyimporter.backup
 
 import io.github.maximus5.ffnotifyimporter.prefs.RetentionSettings
+import io.github.maximus5.ffnotifyimporter.rules.AutoCategoryEntry
+import io.github.maximus5.ffnotifyimporter.rules.CategoryMatch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -21,6 +23,7 @@ class BackupSettingsJsonTest {
         notificationsEnabled = false,
         showFinancialInfo = true,
         notifySkippedDuplicates = true,
+        autoCategoriesLearn = true,
     )
 
     private fun backup(settings: BackupSettings?) = FullBackupData(
@@ -50,6 +53,20 @@ class BackupSettingsJsonTest {
         val json = """{"monitoredPackages":["bank.app"],"settings":{"autoCreate":true,"dedupWindowMinutes":0}}"""
         val settings = fullBackupFromJson(json)!!.settings!!
         assertEquals(BackupSettings().copy(autoCreate = true), settings)
+    }
+
+    @Test
+    fun `the auto categories list round-trips and an older file leaves it untouched`() {
+        val entries = listOf(
+            AutoCategoryEntry("shop1234", CategoryMatch.EQUALS, "Food"),
+            AutoCategoryEntry("cafe", CategoryMatch.CONTAINS, "Restaurants", active = false, learned = false),
+        )
+        val withList = backup(nonDefault).copy(autoCategories = entries)
+        assertEquals(entries, fullBackupFromJson(fullBackupToJson(withList))!!.autoCategories)
+
+        val old = fullBackupToJson(backup(nonDefault))
+        assertFalse(old.contains("autoCategories\""))
+        assertNull(fullBackupFromJson(old)!!.autoCategories)
     }
 
     @Test

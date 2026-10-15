@@ -1,6 +1,7 @@
 package io.github.maximus5.ffnotifyimporter.backup
 
 import android.content.Context
+import io.github.maximus5.ffnotifyimporter.prefs.AutoCategoriesPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.FireflyPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.NotificationPrefs
 import org.json.JSONObject
@@ -26,6 +27,8 @@ data class BackupSettings(
     val notificationsEnabled: Boolean = true,
     val showFinancialInfo: Boolean = false,
     val notifySkippedDuplicates: Boolean = false,
+    /** The Auto categories learning switch; the entries themselves travel in [FullBackupData]. */
+    val autoCategoriesLearn: Boolean = false,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("allTransactionsTags", allTransactionsTags)
@@ -40,6 +43,7 @@ data class BackupSettings(
         .put("notificationsEnabled", notificationsEnabled)
         .put("showFinancialInfo", showFinancialInfo)
         .put("notifySkippedDuplicates", notifySkippedDuplicates)
+        .put("autoCategoriesLearn", autoCategoriesLearn)
 
     companion object {
         private val DEFAULTS = BackupSettings()
@@ -58,6 +62,7 @@ data class BackupSettings(
             notificationsEnabled = o.optBoolean("notificationsEnabled", DEFAULTS.notificationsEnabled),
             showFinancialInfo = o.optBoolean("showFinancialInfo", DEFAULTS.showFinancialInfo),
             notifySkippedDuplicates = o.optBoolean("notifySkippedDuplicates", DEFAULTS.notifySkippedDuplicates),
+            autoCategoriesLearn = o.optBoolean("autoCategoriesLearn", DEFAULTS.autoCategoriesLearn),
         )
 
         fun read(context: Context): BackupSettings {
@@ -76,6 +81,7 @@ data class BackupSettings(
                 notificationsEnabled = notifications.isNotificationsEnabled(),
                 showFinancialInfo = notifications.isShowFinancialInfoEnabled(),
                 notifySkippedDuplicates = notifications.isNotifySkippedDuplicatesEnabled(),
+                autoCategoriesLearn = AutoCategoriesPrefs(context).isLearnEnabled(),
             )
         }
 
@@ -94,6 +100,7 @@ data class BackupSettings(
             notifications.setNotificationsEnabled(s.notificationsEnabled)
             notifications.setShowFinancialInfoEnabled(s.showFinancialInfo)
             notifications.setNotifySkippedDuplicatesEnabled(s.notifySkippedDuplicates)
+            AutoCategoriesPrefs(context).setLearnEnabled(s.autoCategoriesLearn)
         }
     }
 }

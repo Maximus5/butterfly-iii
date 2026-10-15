@@ -3737,3 +3737,6 @@ this is a map lookup in the engine.
   edit dialog (counterparty, match, category with Firefly's category suggestions; a new entry
   defaults to Contains). Everything applies at once, like the Currencies list - no Save button.
   Reordering typed-in entries (first match wins) is not built; new ones are appended.
+- **Backups**: the `auto_categories` prefs file is in both Auto Backup rule sets, and the manual JSON
+  backup carries the list (`FullBackupData.autoCategories`, null in a file from before - restore then
+  keeps the current list) and the learning switch (`BackupSettings.autoCategoriesLearn`).

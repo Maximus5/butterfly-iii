@@ -4,6 +4,7 @@ import android.content.Context
 import io.github.maximus5.ffnotifyimporter.data.MessageHistoryDb
 import io.github.maximus5.ffnotifyimporter.data.MessageStore
 import io.github.maximus5.ffnotifyimporter.data.RetentionController
+import io.github.maximus5.ffnotifyimporter.prefs.AutoCategoriesPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.MonitoredAppsPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.RetentionPrefs
 import io.github.maximus5.ffnotifyimporter.rules.CreatedTransactionsDb
@@ -26,6 +27,7 @@ object BackupManager {
         messages = MessageStore.shared.snapshot(),
         createdTransactions = CreatedTransactionsDb.getInstance(context).loadAll(),
         settings = BackupSettings.read(context),
+        autoCategories = AutoCategoriesPrefs(context).loadEntries(),
     )
 
     /**
@@ -40,6 +42,8 @@ object BackupManager {
         RetentionPrefs(context).set(data.retention)
         // Null = a file from before settings were backed up: keep whatever is set now.
         data.settings?.let { BackupSettings.apply(context, it) }
+        // Null = a file from before Auto categories existed: keep the current list.
+        data.autoCategories?.let { AutoCategoriesPrefs(context).saveEntries(it) }
 
         val currenciesDb = CurrenciesDb.getInstance(context)
         currenciesDb.loadAll().forEach { currenciesDb.delete(it.code) }

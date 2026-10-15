@@ -2,10 +2,13 @@ package io.github.maximus5.ffnotifyimporter.backup
 
 import io.github.maximus5.ffnotifyimporter.data.CapturedMessage
 import io.github.maximus5.ffnotifyimporter.prefs.RetentionSettings
+import io.github.maximus5.ffnotifyimporter.rules.AutoCategoryEntry
 import io.github.maximus5.ffnotifyimporter.rules.CreatedTransactionRecord
 import io.github.maximus5.ffnotifyimporter.rules.CurrencyEntry
 import io.github.maximus5.ffnotifyimporter.rules.ParseRule
 import io.github.maximus5.ffnotifyimporter.rules.RuleKind
+import io.github.maximus5.ffnotifyimporter.rules.autoCategoriesFromJson
+import io.github.maximus5.ffnotifyimporter.rules.autoCategoriesToJson
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -42,6 +45,9 @@ data class FullBackupData(
     /** Null for a file written before settings were backed up: restore then leaves the current
      * settings alone instead of resetting them to defaults. */
     val settings: BackupSettings? = null,
+    /** The Auto categories list. Null for a file written before it existed: restore then keeps the
+     * current list instead of emptying it. */
+    val autoCategories: List<AutoCategoryEntry>? = null,
 )
 
 fun fullBackupToJson(data: FullBackupData): String {
@@ -94,6 +100,7 @@ fun fullBackupToJson(data: FullBackupData): String {
         },
     )
     data.settings?.let { root.put("settings", it.toJson()) }
+    data.autoCategories?.let { root.put("autoCategories", autoCategoriesToJson(it)) }
     return root.toString(2)
 }
 
@@ -177,6 +184,7 @@ fun fullBackupFromJson(json: String): FullBackupData? {
         messages = messages,
         createdTransactions = createdTransactions,
         settings = root.optJSONObject("settings")?.let(BackupSettings::fromJson),
+        autoCategories = root.optJSONArray("autoCategories")?.let(::autoCategoriesFromJson),
     )
 }
 
