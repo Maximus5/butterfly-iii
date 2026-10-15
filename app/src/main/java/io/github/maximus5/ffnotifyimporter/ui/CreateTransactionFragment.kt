@@ -38,6 +38,7 @@ import io.github.maximus5.ffnotifyimporter.posting.ReviewNotifications
 import io.github.maximus5.ffnotifyimporter.posting.checkForDuplicate
 import io.github.maximus5.ffnotifyimporter.posting.matchMessage
 import io.github.maximus5.ffnotifyimporter.posting.verifyLinkedTransaction
+import io.github.maximus5.ffnotifyimporter.prefs.AutoCategoriesPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.FireflyPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.RetentionPrefs
 import io.github.maximus5.ffnotifyimporter.rules.CreatedTransactionsDb
@@ -102,6 +103,14 @@ class CreateTransactionFragment : Fragment() {
      * rule that just matched, in edit mode whatever was stored when the transaction was created. */
     private var appliedRuleLabel: String? = null
     private var selectedTimestampMillis: Long = 0L
+
+    /** What "Auto categories" needs at save time: the rule's captured `counterparty` (null = none,
+     * nothing to learn), whether the rule named the category itself, and the category the editor
+     * opened with - so only a category the user actually changed here is learned (or switches an
+     * entry off), see [AutoCategories.afterCategoryEdit]. */
+    private var learnCounterparty: String? = null
+    private var learnRuleSetCategory = false
+    private var initialCategory = ""
 
     private data class PickedAccount(val id: String, val name: String)
     private var sourceAccountPick: PickedAccount? = null
@@ -225,6 +234,9 @@ class CreateTransactionFragment : Fragment() {
 
         kind = draft.kind
         populateFields(draft)
+        learnCounterparty = draft.counterparty
+        learnRuleSetCategory = draft.categoryFromRule
+        initialCategory = draft.category.orEmpty().trim()
         enableAccountPickersForCreate()
         updateKindText()
 
@@ -295,6 +307,8 @@ class CreateTransactionFragment : Fragment() {
                     kind = result.candidate.kind
                     showStoredRuleLabel(binding)
                     populateFieldsFromCandidate(result.candidate)
+                    initialCategory = result.candidate.category.orEmpty().trim()
+                    findCounterpartyForLearning(context)
                     updateAccountFieldModes()
                     updateKindText()
                     saveMenu?.enabled = true
@@ -313,6 +327,17 @@ class CreateTransactionFragment : Fragment() {
                         .show()
                 }
             }
+        }
+    }
+
+    /** Edit mode has no draft of its own, so the rule is matched again against the message to learn
+     * which counterparty it names. Silent: no match (rule edited or removed since) or no
+     * `counterparty` group just means nothing is learned from this save. */
+    private fun findCounterpartyForLearning(context: Context) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val draft = (matchMessage(context, message) as? ParseOutcome.Matched)?.draft ?: return@launch
+            learnCounterparty = draft.counterparty
+            learnRuleSetCategory = draft.categoryFromRule
         }
     }
 
@@ -848,6 +873,12 @@ class CreateTransactionFragment : Fragment() {
         )
         RetentionController.purgeCreatedTransactions(createdDb, RetentionPrefs(context).getRetentionDays())
         FireflySuggestions.remember(FireflyPrefs(context), draft.category, draft.tags)
+        AutoCategoriesPrefs(context).recordEdit(
+            counterparty = learnCounterparty,
+            finalCategory = draft.category,
+            categoryEdited = !draft.category.orEmpty().trim().equals(initialCategory, ignoreCase = true),
+            ruleSetCategory = learnRuleSetCategory,
+        )
         MessageStore.shared.setTransactionId(message, transactionId, appliedRuleLabel)
         if (!isEditMode && !createdFromApproximateRule) ReviewNotifications.supersedeApproximate(context, draft)
         ReviewNotifications.cancel(context, message)

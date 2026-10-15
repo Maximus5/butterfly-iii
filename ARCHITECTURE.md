@@ -3726,3 +3726,8 @@ this is a map lookup in the engine.
   an inactive entry -> left alone, the settings screen is where it is fixed.
 - **Storage**: own prefs file `auto_categories` (switch `learn_enabled`, `entries` as a JSON array),
   in both Auto Backup rule sets.
+- **Where learning happens**: `ui.CreateTransactionFragment.onSaveSuccess`, create and edit mode alike.
+  Create mode takes `counterparty` / `categoryFromRule` / the opening category from the matched draft;
+  edit mode (no draft) opens with the stored transaction's own category and matches the message again
+  (`findCounterpartyForLearning`) for the counterparty - no match or no group means nothing is learned.
+  Automatic creation never learns (no human edit); it only benefits from the list.
