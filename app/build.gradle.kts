@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.github.triplet.play")
 }
 
 android {
@@ -82,4 +83,21 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+}
+
+// Uploading the bundle to Google Play (Gradle Play Publisher):
+//   ./gradlew publishReleaseBundle                 -> the "internal" track (the default below)
+//   ./gradlew publishReleaseBundle --track alpha   -> any other track by its name
+// Needs a service account with release rights in the Play Console. Its JSON key lives outside the
+// repository; keystore.properties (gitignored, see keystore.properties.example) only points at it
+// with playServiceAccountKey. Without that line the build is unaffected and publishing fails with
+// a clear "no credentials" error instead.
+play {
+    track.set("internal")
+    defaultToAppBundles.set(true)
+    val serviceAccountKey = Properties().apply {
+        val file = rootProject.file("keystore.properties")
+        if (file.exists()) file.inputStream().use { load(it) }
+    }.getProperty("playServiceAccountKey")
+    if (serviceAccountKey != null) serviceAccountCredentials.set(file(serviceAccountKey))
 }

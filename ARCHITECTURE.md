@@ -3566,6 +3566,17 @@ repo root and names the keystore (`storeFile`, passwords, alias); the keystore i
 the repo. Without that file the release build is left unsigned, so a fresh checkout still builds.
 Play App Signing re-signs with Google's own key. `./gradlew bundleRelease` produces the AAB.
 
+**Publishing to Play** (v0.243+): the Gradle Play Publisher plugin (`com.github.triplet.play`) is
+applied in `app/build.gradle.kts`. `./gradlew publishReleaseBundle` builds and uploads the signed
+AAB to the `internal` track (the `play { track }` default); another track is chosen per run with
+`--track <name>` (e.g. `--track alpha`). It authenticates with a Play service account's JSON key,
+which stays outside the repo - `keystore.properties` (gitignored) points at it with
+`playServiceAccountKey`, see `keystore.properties.example`. The `play {}` block only sets the
+credentials when that line exists, so ordinary builds are unaffected and publishing without it
+fails with the plugin's "No credentials specified" error. `versionCode` still comes from
+`build.gradle.kts`; release notes are not wired up yet (the plugin reads them from
+`app/src/main/play/release-notes/<locale>/<track>.txt`).
+
 The status-bar small icon of the app's notifications (`AutoCreateNotifications`,
 `ReviewNotifications`) is `drawable/ic_notification_app.xml`, a flat
 coin-stack silhouette (the system masks small icons to one colour, so the

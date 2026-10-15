@@ -23,3 +23,6 @@ AGENTS.local.md
 
 # Local drafts, not part of the project
 /posts/
+
+# Play service account key (kept outside the repo; see keystore.properties.example)
+play-service-account*.json
