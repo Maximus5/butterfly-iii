@@ -43,12 +43,6 @@
 
     </LinearLayout>
 
-    <com.google.android.material.switchmaterial.SwitchMaterial
-        android:id="@+id/entryActiveSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/auto_categories_active" />
-
     <ImageButton
         android:id="@+id/entryOverflowButton"
         android:layout_width="48dp"

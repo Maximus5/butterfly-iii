@@ -10,6 +10,8 @@ import android.view.ViewTreeObserver
 import android.widget.ListAdapter
 import android.widget.ListView
 import android.widget.PopupWindow
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import kotlin.math.min
@@ -145,9 +147,19 @@ open class SuggestAutoCompleteTextView @JvmOverloads constructor(
 
         val location = IntArray(2)
         getLocationOnScreen(location)
+        // Where this field's window sits on the screen: a popup shown with showAtLocation is placed
+        // relative to its parent *window*, which is the whole screen for an activity but a smaller,
+        // offset window for a dialog - using screen coordinates there put the list well below the
+        // field, over the keyboard.
+        val windowOrigin = IntArray(2)
+        rootView.getLocationOnScreen(windowOrigin)
         val frame = Rect()
         rootView.getWindowVisibleDisplayFrame(frame)
-        val spaceBelow = frame.bottom - (location[1] + height)
+        // A dialog window does not always report its visible frame without the keyboard, so the
+        // IME inset is applied explicitly.
+        val imeHeight = ViewCompat.getRootWindowInsets(this)?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
+        val visibleBottom = if (imeHeight > 0) min(frame.bottom, resources.displayMetrics.heightPixels - imeHeight) else frame.bottom
+        val spaceBelow = visibleBottom - (location[1] + height)
         val spaceAbove = location[1] - frame.top
 
         // Side: the one with more room on the first show, then kept; re-chosen only if the kept side
@@ -162,17 +174,18 @@ open class SuggestAutoCompleteTextView @JvmOverloads constructor(
         showAbove = above
 
         val popupHeight = min(content, if (above) spaceAbove else spaceBelow)
-        val y = if (above) location[1] - popupHeight else location[1] + height
+        val x = location[0] - windowOrigin[0]
+        val y = (if (above) location[1] - popupHeight else location[1] + height) - windowOrigin[1]
         val shown = popup
         if (shown != null) {
-            shown.update(location[0], y, width, popupHeight)
+            shown.update(x, y, width, popupHeight)
         } else {
             val surface = MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainer)
             popup = PopupWindow(list, width, popupHeight, false).apply {
                 isOutsideTouchable = true
                 elevation = 8 * density
                 setBackgroundDrawable(GradientDrawable().apply { setColor(surface); cornerRadius = 4 * density })
-                showAtLocation(rootView, Gravity.NO_GRAVITY, location[0], y)
+                showAtLocation(rootView, Gravity.NO_GRAVITY, x, y)
             }
             viewTreeObserver.addOnScrollChangedListener(scrollListener)
         }

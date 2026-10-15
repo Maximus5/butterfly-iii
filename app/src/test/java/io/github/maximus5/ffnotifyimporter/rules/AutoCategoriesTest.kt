@@ -28,26 +28,34 @@ class AutoCategoriesTest {
     }
 
     @Test
-    fun `an inactive exact entry substitutes nothing and also beats a contains entry`() {
-        val categories = AutoCategories(listOf(contains("shop", "Food"), exact("Shop1234", "Clothes", active = false)))
-        assertNull(categories.categoryFor("Shop1234"))
-        assertEquals("Food", categories.categoryFor("Shop5678"))
+    fun `list order decides - the first matching entry wins, exact or contains alike`() {
+        val categories = AutoCategories(listOf(exact("Cafe Shop1234", "C"), contains("shop", "A"), contains("op", "B")))
+        assertEquals("C", categories.categoryFor("Cafe Shop1234"))
+        assertEquals("A", categories.categoryFor("Big Shop"))
+        assertEquals("B", categories.categoryFor("Laptop"))
+
+        val broadFirst = AutoCategories(listOf(contains("shop", "A"), exact("Cafe Shop1234", "C")))
+        assertEquals("A", broadFirst.categoryFor("Cafe Shop1234"))
     }
 
     @Test
-    fun `exact beats contains, contains goes by list order and skips inactive entries`() {
+    fun `a switched-off entry still matches and stops the search, with or without a category`() {
         val categories = AutoCategories(
-            listOf(contains("cafe", "Restaurants", active = false), contains("shop", "A"), contains("op", "B"), exact("cafe shop1234", "C")),
+            listOf(contains("amazon prime", "Entertainment"), contains("amazon", "", active = false), contains("a", "Misc")),
         )
-        assertEquals("C", categories.categoryFor("Cafe Shop1234"))
-        assertEquals("A", categories.categoryFor("Big Shop"))
-        assertNull(categories.categoryFor("Cafe Corner"))
+        assertEquals("Entertainment", categories.categoryFor("Amazon Prime Video"))
+        assertNull(categories.categoryFor("Amazon Marketplace"))
+        assertEquals("Misc", categories.categoryFor("Bakery"))
+
+        val remembered = AutoCategories(listOf(exact("Shop1234", "Clothes", active = false), contains("shop", "Food")))
+        assertNull(remembered.categoryFor("Shop1234"))
+        assertEquals("Food", remembered.categoryFor("Shop5678"))
     }
 
     @Test
     fun `a category is learned once, from an edit, when learning is on`() {
-        val empty = AutoCategories.EMPTY
-        val learned = empty.afterCategoryEdit("Shop1234", "Food", categoryEdited = true, ruleSetCategory = false, learnEnabled = true)
+        val learned = AutoCategories.EMPTY
+            .afterCategoryEdit("Shop1234", "Food", categoryEdited = true, ruleSetCategory = false, learnEnabled = true)
         assertEquals(listOf(exact("Shop1234", "Food")), learned)
 
         // The same counterparty with a different category later: the entry is switched off, never relearned.
@@ -58,6 +66,13 @@ class AutoCategoriesTest {
             AutoCategories(switchedOff!!)
                 .afterCategoryEdit("Shop1234", "Clothes", categoryEdited = true, ruleSetCategory = false, learnEnabled = true),
         )
+    }
+
+    @Test
+    fun `a new learned entry goes to the end of the list`() {
+        val existing = listOf(contains("cafe", "Restaurants"), exact("Shop1", "Food"))
+        val updated = AutoCategories(existing).afterCategoryEdit("Shop2", "Clothes", true, false, true)!!
+        assertEquals(existing + exact("Shop2", "Clothes"), updated)
     }
 
     @Test
@@ -75,23 +90,40 @@ class AutoCategoriesTest {
         assertNull(learn(withEntry, category = "food"))
         // Clearing a substituted category counts as changing it.
         assertEquals(listOf(exact("Shop1234", "Food", active = false)), learn(withEntry, category = ""))
+        // A matching entry that is switched off is never touched, and nothing is learned past it.
+        assertNull(learn(AutoCategories(listOf(contains("shop", "", active = false)))))
     }
 
     @Test
-    fun `an edit of a category that a contains entry supplied is learned as an exact exception`() {
-        val manual = AutoCategories(listOf(contains("cafe", "Restaurants")))
+    fun `an edit under a contains entry inserts an exact exception right above it`() {
+        val manual = AutoCategories(listOf(exact("Other", "X"), contains("cafe", "Restaurants")))
         val updated = manual.afterCategoryEdit("Cafe Corner", "Groceries", true, false, true)!!
-        assertEquals(2, updated.size)
+        assertEquals(listOf(exact("Other", "X"), exact("Cafe Corner", "Groceries"), contains("cafe", "Restaurants")), updated)
         assertEquals("Groceries", AutoCategories(updated).categoryFor("Cafe Corner"))
         assertEquals("Restaurants", AutoCategories(updated).categoryFor("Cafe Other"))
+
+        // Clearing the supplied category: the exception is a switched-off entry with no category.
+        val cleared = manual.afterCategoryEdit("Cafe Corner", null, true, false, true)!!
+        assertEquals(AutoCategoryEntry("cafe corner", CategoryMatch.EQUALS, "", active = false, learned = true), cleared[1])
+        assertNull(AutoCategories(cleared).categoryFor("Cafe Corner"))
+    }
+
+    @Test
+    fun `moving the selection up or down keeps blocks at the edge in place`() {
+        val items = listOf("a", "b", "c", "d", "e")
+        assertEquals(listOf("b", "a", "c", "d", "e") to setOf(0), moveSelected(items, setOf(1), up = true))
+        assertEquals(listOf("a", "b", "d", "c", "e") to setOf(3), moveSelected(items, setOf(2), up = false))
+        // A block already at the top does not shuffle internally; a separate member still moves.
+        assertEquals(listOf("a", "b", "d", "c", "e") to setOf(0, 1, 2), moveSelected(items, setOf(0, 1, 3), up = true))
+        assertEquals(items to setOf(3, 4), moveSelected(items, setOf(3, 4), up = false))
     }
 
     @Test
     fun `json round trip keeps order and flags, skips unreadable entries`() {
-        val entries = listOf(exact("Shop1234", "Food"), contains("cafe", "Restaurants", active = false))
+        val entries = listOf(exact("Shop1234", "Food"), contains("cafe", "Restaurants", active = false), contains("amazon", "", active = false))
         assertEquals(entries, autoCategoriesFromJson(autoCategoriesToJson(entries)))
 
-        val array = JSONArray("""[{"key":" Shop 1 ","category":"X"},{"key":"","category":"Y"},{"key":"k","category":"Z","match":"NOPE"},"junk"]""")
+        val array = JSONArray("""[{"key":" Shop 1 ","category":"X"},{"key":"","category":"Y"},{"key":"k","category":"Z","match":"NOPE"},{"key":"blank","category":""},"junk"]""")
         val parsed = autoCategoriesFromJson(array)
         assertEquals(listOf(AutoCategoryEntry("shop 1", CategoryMatch.EQUALS, "X")), parsed)
         assertTrue(autoCategoriesFromJson(null).isEmpty())

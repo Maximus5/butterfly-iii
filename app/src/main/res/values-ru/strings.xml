@@ -393,6 +393,9 @@
     <string name="auto_categories_origin_learned">выучена</string>
     <string name="auto_categories_origin_manual">добавлена вами</string>
     <string name="auto_categories_row_detail">%1$s · %2$s</string>
-    <string name="auto_categories_active">Подставлять эту категорию</string>
     <string name="auto_categories_delete_confirm_title">Удалить «%1$s»?</string>
+    <string name="auto_categories_field_active">Подставлять категорию</string>
+    <string name="auto_categories_field_active_hint">Выключено: для этого контрагента категория не подставляется (и ничего ниже в списке не применяется).</string>
+    <string name="auto_categories_not_filled">Категория не подставляется</string>
+    <string name="auto_categories_delete_selected_confirm_title">Удалить записей: %1$d?</string>
 </resources>

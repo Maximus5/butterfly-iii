@@ -40,7 +40,24 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/activeSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:checked="true"
+        android:text="@string/auto_categories_field_active" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:text="@string/auto_categories_field_active_hint"
+        android:textColor="#888888"
+        android:textSize="13sp" />
+
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/categoryLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/auto_categories_field_category"

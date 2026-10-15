@@ -3712,18 +3712,23 @@ this is a map lookup in the engine.
   account: the user's decision, so a rule has to name the group exactly that to take part. A message
   without the group neither learns nor gets a category.
 - **Model** (`rules.AutoCategories`, pure, unit-tested): `AutoCategoryEntry(key, match, category,
-  active, learned)`; `match` is `EQUALS` (learned) or `CONTAINS` (typed in by the user). Lookup
-  (`categoryFor`): an exact entry decides alone - active or not, so a switched-off exact entry also
-  beats a broader contains entry; then active contains entries in list order.
+  active, learned)`; `match` is `EQUALS` (learned) or `CONTAINS` (typed in by the user). **List order
+  is the priority, exactly like the parse rules**: `categoryFor` returns the category of the *first*
+  entry that matches, exact or contains alike, so a narrow entry ("amazon prime" -> Entertainment)
+  above a broad one ("amazon" -> nothing) wins. An entry with `active = false` ("fill in the category"
+  off) still matches and stops the search - nothing is substituted and nothing below it applies - and
+  its category may be blank (the typical "this shop sells everything" entry).
 - **Applied** in `RuleEngine.buildDraft`: `category = ruleCategory ?: autoCategories.categoryFor(
   counterparty)`. The rule's own category template always wins. The draft carries `counterparty` and
   `categoryFromRule` so the screens know what to learn from. The list reaches the engine as plain
   data (`posting.RuleMatching.buildEngine`), like the other injected settings.
 - **Learned** (`AutoCategories.afterCategoryEdit`, stored through `AutoCategoriesPrefs.recordEdit`)
   only when the switch is on, the saved category differs from the one the editor opened with, the
-  rule set no category and the counterparty is known: no entry yet -> a new `EQUALS` entry (once);
-  an active entry whose category was changed -> switched off (the counterparty evidently varies);
-  an inactive entry -> left alone, the settings screen is where it is fixed.
+  rule set no category and the counterparty is known, looking at the first entry that matches it:
+  none -> a new `EQUALS` entry at the end of the list (once); a switched-off entry or one that
+  already has this category -> nothing; an exact entry whose category was changed -> switched off
+  (the counterparty evidently varies); a typed-in "contains" entry -> left alone, and a new exact
+  entry (the correction, or "no category") is inserted right above it so the exception wins.
 - **Storage**: own prefs file `auto_categories` (switch `learn_enabled`, `entries` as a JSON array),
   in both Auto Backup rule sets.
 - **Where learning happens**: `ui.CreateTransactionFragment.onSaveSuccess`, create and edit mode alike.
@@ -3732,11 +3737,14 @@ this is a map lookup in the engine.
   (`findCounterpartyForLearning`) for the counterparty - no match or no group means nothing is learned.
   Automatic creation never learns (no human edit); it only benefits from the list.
 - **Settings screen** (`ui.AutoCategoriesFragment`, a row in the settings root): the learning switch
-  (off by default), then the list - key, category, "Equals/Contains - learned/added by you", a
-  per-row switch (off = do not substitute) and an overflow menu (delete). Tap a row or "+" for the
-  edit dialog (counterparty, match, category with Firefly's category suggestions; a new entry
-  defaults to Contains). Everything applies at once, like the Currencies list - no Save button.
-  Reordering typed-in entries (first match wins) is not built; new ones are appended.
+  (off by default), then the list in priority order - key, the category (or "No category is filled
+  in" for a switched-off entry), "Equals/Contains - learned/added by you". It behaves like the rules
+  list: tap opens the edit dialog, long-press starts a multi-select whose toolbar moves the selection
+  up/down (`rules.moveSelected`, the same "a block at the edge stays put" semantics) or deletes it,
+  and the per-row overflow menu has move up / move down / delete. The edit dialog has counterparty,
+  match (a new entry defaults to Contains), the "Fill in the category" switch - off disables the
+  category field and it is then not required - and the category with Firefly's suggestions. Everything
+  applies at once, like the Currencies list - no Save button.
 - **Backups**: the `auto_categories` prefs file is in both Auto Backup rule sets, and the manual JSON
   backup carries the list (`FullBackupData.autoCategories`, null in a file from before - restore then
   keeps the current list) and the learning switch (`BackupSettings.autoCategoriesLearn`).

@@ -24,13 +24,16 @@ import io.github.maximus5.ffnotifyimporter.prefs.AutoCategoriesPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.FireflyPrefs
 import io.github.maximus5.ffnotifyimporter.rules.AutoCategoryEntry
 import io.github.maximus5.ffnotifyimporter.rules.CategoryMatch
+import io.github.maximus5.ffnotifyimporter.rules.moveSelected
 import io.github.maximus5.ffnotifyimporter.rules.normalizeCounterpartyKey
 import kotlinx.coroutines.launch
 
 /**
  * Settings -> Auto categories: the learning switch and the counterparty -> category list (see
- * `rules.AutoCategories`). Changes apply at once (switch, per-row switch, add/edit/delete), like
- * the Currencies list - there is no Save button on this screen.
+ * `rules.AutoCategories`). The list behaves like the rules list: its order is the priority (first
+ * match wins), long-press selects rows and the toolbar then moves them up/down or deletes them, each
+ * row has the same overflow menu. Changes apply at once (switch, add/edit/move/delete) - there is no
+ * Save button on this screen, like the Currencies list.
  */
 class AutoCategoriesFragment : Fragment() {
 
@@ -38,6 +41,7 @@ class AutoCategoriesFragment : Fragment() {
     private lateinit var prefs: AutoCategoriesPrefs
     private lateinit var adapter: AutoCategoriesAdapter
     private var entries: List<AutoCategoryEntry> = emptyList()
+    private var inSelectionMode = false
 
     /** Firefly's category names for the edit dialog's suggestions; silent if unavailable. */
     private var categoryNames: List<String>? = null
@@ -56,23 +60,30 @@ class AutoCategoriesFragment : Fragment() {
         binding.learnSwitch.setOnCheckedChangeListener { _, checked -> prefs.setLearnEnabled(checked) }
 
         adapter = AutoCategoriesAdapter(
-            onClick = ::showEditDialog,
-            onActiveChanged = ::setActive,
+            onClick = ::handleClick,
+            onLongClick = ::handleLongClick,
             onOverflowClick = ::showOverflowMenu,
         )
         binding.entriesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.entriesRecyclerView.adapter = adapter
 
+        // One provider for both menus (normal / selection), re-run by invalidateMenu() - same
+        // shape as RulesListFragment.
         requireActivity().addMenuProvider(
             object : MenuProvider {
                 override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                    menuInflater.inflate(R.menu.menu_auto_categories_list, menu)
+                    menuInflater.inflate(
+                        if (inSelectionMode) R.menu.menu_auto_categories_selection else R.menu.menu_auto_categories_list,
+                        menu,
+                    )
                 }
 
-                override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                    if (menuItem.itemId != R.id.action_add_auto_category) return false
-                    showEditDialog(null)
-                    return true
+                override fun onMenuItemSelected(menuItem: MenuItem): Boolean = when (menuItem.itemId) {
+                    R.id.action_add_auto_category -> { showEditDialog(null); true }
+                    R.id.action_move_up_selected -> { moveSelectedEntries(up = true); true }
+                    R.id.action_move_down_selected -> { moveSelectedEntries(up = false); true }
+                    R.id.action_delete_selected_entries -> { confirmDelete(adapter.selectedIndices()); true }
+                    else -> false
                 }
             },
             viewLifecycleOwner,
@@ -83,6 +94,7 @@ class AutoCategoriesFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        if (!inSelectionMode) (activity as? SettingsActivity)?.setScreenTitle(R.string.settings_auto_categories_title)
         reload()
     }
 
@@ -100,10 +112,56 @@ class AutoCategoriesFragment : Fragment() {
         }
     }
 
-    private fun setActive(index: Int, active: Boolean) {
-        if (index !in entries.indices || entries[index].active == active) return
-        prefs.saveEntries(entries.toMutableList().also { it[index] = it[index].copy(active = active) })
-        reload()
+    private fun handleClick(index: Int) {
+        if (inSelectionMode) {
+            adapter.toggleSelection(index)
+            if (adapter.selectedCount() == 0) clearSelectionAndExit() else updateSelectionCountDisplay()
+        } else {
+            showEditDialog(index)
+        }
+    }
+
+    private fun handleLongClick(index: Int): Boolean {
+        if (!inSelectionMode) {
+            inSelectionMode = true
+            adapter.setSelectionMode(true)
+            adapter.toggleSelection(index)
+            requireActivity().invalidateMenu()
+            (activity as? SettingsActivity)?.apply {
+                updateSelectionCount(adapter.selectedCount())
+                setBackGuard(::clearSelectionAndExit)
+            }
+        } else {
+            handleClick(index)
+        }
+        return true
+    }
+
+    private fun updateSelectionCountDisplay() {
+        (activity as? SettingsActivity)?.updateSelectionCount(adapter.selectedCount())
+    }
+
+    private fun clearSelectionAndExit() {
+        adapter.clearSelection()
+        adapter.setSelectionMode(false)
+        inSelectionMode = false
+        requireActivity().invalidateMenu()
+        (activity as? SettingsActivity)?.apply {
+            setBackGuard(null)
+            setScreenTitle(R.string.settings_auto_categories_title)
+        }
+    }
+
+    /** The selection (on-screen positions) after the move is what stays selected, and the list
+     * scrolls to the leading edge so a repeated tap cannot walk it off the screen. */
+    private fun moveSelectedEntries(up: Boolean) {
+        val (moved, selection) = moveSelected(entries, adapter.selectedIndices(), up)
+        prefs.saveEntries(moved)
+        entries = moved
+        adapter.submitList(moved)
+        adapter.setSelected(selection)
+        val lead = if (up) selection.minOrNull() else selection.maxOrNull()
+        if (lead != null) binding?.entriesRecyclerView?.scrollToPosition(lead)
     }
 
     /** [index] null = a new, typed-in entry (contains by default - the usual "cafe" case). */
@@ -115,6 +173,16 @@ class AutoCategoriesFragment : Fragment() {
         categoryNames?.takeIf { it.isNotEmpty() }?.let {
             dialogBinding.categoryInput.setAdapter(SuggestionAdapter(requireContext(), it))
         }
+
+        // "Fill in the category" off: the category is not needed (it stays in the field, greyed out,
+        // so switching back does not lose it).
+        fun applyActive(active: Boolean) {
+            dialogBinding.categoryLayout.isEnabled = active
+            dialogBinding.categoryInput.isEnabled = active
+        }
+        dialogBinding.activeSwitch.isChecked = existing?.active ?: true
+        applyActive(dialogBinding.activeSwitch.isChecked)
+        dialogBinding.activeSwitch.setOnCheckedChangeListener { _, checked -> applyActive(checked) }
 
         val matches = listOf(CategoryMatch.EQUALS, CategoryMatch.CONTAINS)
         val labels = matches.map {
@@ -135,9 +203,10 @@ class AutoCategoriesFragment : Fragment() {
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
             val key = normalizeCounterpartyKey(dialogBinding.keyInput.text?.toString().orEmpty())
             val category = dialogBinding.categoryInput.text?.toString()?.trim().orEmpty()
+            val active = dialogBinding.activeSwitch.isChecked
             val problem = when {
                 key.isEmpty() -> R.string.auto_categories_key_required
-                category.isEmpty() -> R.string.auto_categories_category_required
+                active && category.isEmpty() -> R.string.auto_categories_category_required
                 entries.withIndex().any { (i, e) -> i != index && e.match == match && e.key == key } -> R.string.auto_categories_duplicate
                 else -> null
             }
@@ -149,7 +218,7 @@ class AutoCategoriesFragment : Fragment() {
                 key = key,
                 match = match,
                 category = category,
-                active = existing?.active ?: true,
+                active = active,
                 learned = existing?.learned ?: false,
             )
             prefs.saveEntries(
@@ -160,24 +229,42 @@ class AutoCategoriesFragment : Fragment() {
         }
     }
 
+    /** Same action set/order as the selection menu (move up, move down, delete last), like the
+     * rules list's own pair of menus. */
     private fun showOverflowMenu(index: Int, anchor: View) {
         val popup = PopupMenu(requireContext(), anchor)
-        popup.menu.add(0, ID_DELETE, 0, R.string.action_delete)
+        popup.menu.add(0, ID_MOVE_UP, 0, R.string.rule_move_up)
+        popup.menu.add(0, ID_MOVE_DOWN, 1, R.string.rule_move_down)
+        popup.menu.add(0, ID_DELETE, 2, R.string.rule_action_delete)
         popup.setOnMenuItemClickListener { item ->
-            if (item.itemId == ID_DELETE) confirmDelete(index)
+            when (item.itemId) {
+                ID_MOVE_UP, ID_MOVE_DOWN -> {
+                    val (moved, _) = moveSelected(entries, setOf(index), item.itemId == ID_MOVE_UP)
+                    prefs.saveEntries(moved)
+                    reload()
+                }
+                ID_DELETE -> confirmDelete(setOf(index))
+                else -> return@setOnMenuItemClickListener false
+            }
             true
         }
         popup.show()
     }
 
-    private fun confirmDelete(index: Int) {
-        val entry = entries.getOrNull(index) ?: return
+    private fun confirmDelete(indices: Set<Int>) {
+        if (indices.isEmpty()) return
+        val title = if (indices.size == 1) {
+            getString(R.string.auto_categories_delete_confirm_title, entries.getOrNull(indices.first())?.key.orEmpty())
+        } else {
+            getString(R.string.auto_categories_delete_selected_confirm_title, indices.size)
+        }
         // Cancel always rightmost/last (house convention, AGENTS.md).
         AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.auto_categories_delete_confirm_title, entry.key))
+            .setTitle(title)
             .setNegativeButton(R.string.action_delete) { _, _ ->
-                prefs.saveEntries(entries.toMutableList().also { it.removeAt(index) })
+                prefs.saveEntries(entries.filterIndexed { i, _ -> i !in indices })
                 reload()
+                if (inSelectionMode) clearSelectionAndExit()
             }
             .setPositiveButton(android.R.string.cancel, null)
             .show()
@@ -185,10 +272,14 @@ class AutoCategoriesFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Leaving with a selection active must not leave the activity's back guard behind.
+        if (inSelectionMode) (activity as? SettingsActivity)?.setBackGuard(null)
         binding = null
     }
 
     private companion object {
-        const val ID_DELETE = 1
+        const val ID_MOVE_UP = 1
+        const val ID_MOVE_DOWN = 2
+        const val ID_DELETE = 3
     }
 }

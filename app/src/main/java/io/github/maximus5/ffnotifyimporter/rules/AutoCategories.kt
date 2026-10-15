@@ -15,12 +15,12 @@ enum class CategoryMatch {
 /**
  * One counterparty -> category assignment.
  *
- * [key] is already normalized ([normalizeCounterpartyKey]). [active] = false means "do not
- * substitute a category for this counterparty": either the user switched it off (a shop that sells
- * everything, e.g. a big marketplace) or the app switched it off because the user changed the
- * substituted category ([AutoCategories.afterCategoryEdit]). An inactive [CategoryMatch.EQUALS]
- * entry is also what stops the same counterparty from being learned again - learning is once.
- * [learned] only tells the list screen where the entry came from.
+ * [key] is already normalized ([normalizeCounterpartyKey]). [active] = false means "fill in no
+ * category for this counterparty": the user chose that for a shop that sells everything (a big
+ * marketplace), or the app switched it off because the user changed the substituted category
+ * ([AutoCategories.afterCategoryEdit]). Such an entry still *matches* - it stops the search, so
+ * nothing further down the list applies to that counterparty and it is not learned again - and its
+ * [category] may be blank. [learned] only tells the list screen where the entry came from.
  */
 data class AutoCategoryEntry(
     val key: String,
@@ -36,24 +36,26 @@ private val whitespaceRun = Regex("\\s+")
  * (punctuation, store numbers) is touched - the user shortens a key by editing the entry. */
 fun normalizeCounterpartyKey(raw: String): String = raw.replace(whitespaceRun, " ").trim().lowercase()
 
+private fun AutoCategoryEntry.matches(normalizedCounterparty: String): Boolean = when (match) {
+    CategoryMatch.EQUALS -> key == normalizedCounterparty
+    CategoryMatch.CONTAINS -> key.isNotEmpty() && normalizedCounterparty.contains(key)
+}
+
 /**
  * The counterparty -> category list ("Auto categories"), applied by [RuleEngine] when a rule leaves
- * its own category blank. Order is the user's list order; pure, so it is unit-tested.
+ * its own category blank. **List order is the priority**, exactly like the parse rules: the first
+ * entry that matches decides, nothing further is tried - so a narrow entry ("Amazon Prime Video" ->
+ * Entertainment) placed above a broad one ("Amazon" -> no category) wins. Pure, so it is unit-tested.
  */
 class AutoCategories(val entries: List<AutoCategoryEntry>) {
 
-    /** The category to substitute for [counterparty], or null for none. An exact entry decides on
-     * its own - active or not - so an inactive exact entry ("don't categorize this shop") also
-     * beats a broader [CategoryMatch.CONTAINS] entry; only then the active contains entries are
-     * tried, first one in list order wins. */
+    /** The category to substitute for [counterparty], or null for none (no entry matches, or the
+     * first matching one is switched off). */
     fun categoryFor(counterparty: String?): String? {
         val key = normalizeCounterpartyKey(counterparty.orEmpty())
         if (key.isEmpty()) return null
-        val exact = entries.firstOrNull { it.match == CategoryMatch.EQUALS && it.key == key }
-        if (exact != null) return exact.category.takeIf { exact.active && it.isNotBlank() }
-        return entries.firstOrNull {
-            it.match == CategoryMatch.CONTAINS && it.active && it.key.isNotEmpty() && key.contains(it.key)
-        }?.category?.takeIf { it.isNotBlank() }
+        val hit = entries.firstOrNull { it.matches(key) } ?: return null
+        return hit.category.takeIf { hit.active && it.isNotBlank() }
     }
 
     /**
@@ -61,11 +63,15 @@ class AutoCategories(val entries: List<AutoCategoryEntry>) {
      *
      * Only an edit counts ([categoryEdited]: the saved category differs from the one the editor
      * opened with), only when learning is on, and never when the rule itself named a category
-     * ([ruleSetCategory] - that is the rule's call, not an ambiguity of the counterparty).
-     * - no entry for this counterparty yet and a category was chosen: it is learned (once);
-     * - an active entry whose category the user just changed: switched off, because the same
+     * ([ruleSetCategory] - that is the rule's call, not an ambiguity of the counterparty). Then,
+     * looking at the first entry that matches the counterparty:
+     * - none: the category is learned (once) as a new entry at the end of the list;
+     * - it is switched off, or already has this category: nothing changes (learning is once; the
+     *   user fixes entries in the settings);
+     * - an exact entry whose category the user just changed: it is switched off - the same
      *   counterparty evidently does not always get this category;
-     * - an inactive entry: left alone (learning is once; the user fixes it in the settings).
+     * - a typed-in "contains" entry: it is left as it is and a new exact entry (the correction, or
+     *   "no category" if the user cleared it) is inserted right above it, so the exception wins.
      */
     fun afterCategoryEdit(
         counterparty: String?,
@@ -78,19 +84,52 @@ class AutoCategories(val entries: List<AutoCategoryEntry>) {
         val key = normalizeCounterpartyKey(counterparty.orEmpty())
         if (key.isEmpty()) return null
         val category = finalCategory?.trim().orEmpty()
-        val index = entries.indexOfFirst { it.match == CategoryMatch.EQUALS && it.key == key }
-        if (index >= 0) {
-            val existing = entries[index]
-            if (!existing.active || existing.category.equals(category, ignoreCase = true)) return null
-            return entries.toMutableList().also { it[index] = existing.copy(active = false) }
+        val index = entries.indexOfFirst { it.matches(key) }
+        if (index < 0) {
+            if (category.isEmpty()) return null
+            return entries + AutoCategoryEntry(key, CategoryMatch.EQUALS, category, active = true, learned = true)
         }
-        if (category.isEmpty()) return null
-        return entries + AutoCategoryEntry(key, CategoryMatch.EQUALS, category, active = true, learned = true)
+        val hit = entries[index]
+        if (!hit.active || hit.category.equals(category, ignoreCase = true)) return null
+        if (hit.match == CategoryMatch.EQUALS) {
+            return entries.toMutableList().also { it[index] = hit.copy(active = false) }
+        }
+        val exception = AutoCategoryEntry(key, CategoryMatch.EQUALS, category, active = category.isNotEmpty(), learned = true)
+        return entries.toMutableList().also { it.add(index, exception) }
     }
 
     companion object {
         val EMPTY = AutoCategories(emptyList())
     }
+}
+
+/**
+ * One "move up / move down" step for the selected positions of a list, the way the rules screen
+ * does it: a selected item swaps with the unselected one next to it, a selected block already at the
+ * edge stays put (its members do not shuffle among themselves). Returns the new list and the new
+ * positions of the selected items. Pure, so it is unit-tested.
+ */
+fun <T> moveSelected(items: List<T>, selected: Set<Int>, up: Boolean): Pair<List<T>, Set<Int>> {
+    val list = items.toMutableList()
+    val marks = BooleanArray(items.size) { it in selected }
+    if (up) {
+        for (i in 1 until list.size) {
+            if (marks[i] && !marks[i - 1]) {
+                list[i - 1] = list[i].also { list[i] = list[i - 1] }
+                marks[i - 1] = true
+                marks[i] = false
+            }
+        }
+    } else {
+        for (i in list.size - 2 downTo 0) {
+            if (marks[i] && !marks[i + 1]) {
+                list[i + 1] = list[i].also { list[i] = list[i + 1] }
+                marks[i + 1] = true
+                marks[i] = false
+            }
+        }
+    }
+    return list to marks.indices.filter { marks[it] }.toSet()
 }
 
 /** The list as stored (SharedPreferences) and as carried by the JSON backup. */
@@ -108,19 +147,21 @@ fun autoCategoriesToJson(entries: List<AutoCategoryEntry>): JSONArray = JSONArra
 }
 
 /** Tolerant like the other backup sections: an unreadable entry is skipped, not fatal. Keys are
- * normalized again so a hand-edited file still matches. */
+ * normalized again so a hand-edited file still matches. A blank category is only valid on a
+ * switched-off entry. */
 fun autoCategoriesFromJson(array: JSONArray?): List<AutoCategoryEntry> {
     if (array == null) return emptyList()
     return (0 until array.length()).mapNotNull { i ->
         val o = array.optJSONObject(i) ?: return@mapNotNull null
         val key = normalizeCounterpartyKey(o.optString("key"))
         val category = o.optString("category").trim()
-        if (key.isEmpty() || category.isEmpty()) return@mapNotNull null
+        val active = o.optBoolean("active", true)
+        if (key.isEmpty() || (category.isEmpty() && active)) return@mapNotNull null
         val match = try {
             CategoryMatch.valueOf(o.optString("match", CategoryMatch.EQUALS.name))
         } catch (e: IllegalArgumentException) {
             return@mapNotNull null
         }
-        AutoCategoryEntry(key, match, category, o.optBoolean("active", true), o.optBoolean("learned", true))
+        AutoCategoryEntry(key, match, category, active, o.optBoolean("learned", true))
     }
 }
