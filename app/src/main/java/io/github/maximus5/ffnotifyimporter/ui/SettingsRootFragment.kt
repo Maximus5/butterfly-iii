@@ -40,6 +40,12 @@ class SettingsRootFragment : Fragment() {
                 R.string.settings_transaction_creation_title,
             )
         }
+        binding.rowAutoCategories.setOnClickListener {
+            (activity as? SettingsActivity)?.openScreen(
+                AutoCategoriesFragment(),
+                R.string.settings_auto_categories_title,
+            )
+        }
         binding.rowNotifications.setOnClickListener {
             (activity as? SettingsActivity)?.openScreen(
                 NotificationSettingsFragment(),

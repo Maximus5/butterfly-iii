@@ -140,3 +140,10 @@ work. Finished work is documented in ARCHITECTURE.md, not here.
     `rules.db` and the four allowlisted `shared_prefs`; the restore side - a
     real restore / device-to-device transfer bringing rules and monitored
     apps back on a fresh install - is not verified.
+
+- Auto categories leftovers (see ARCHITECTURE.md, "Auto categories"):
+  - Reordering the typed-in "contains" entries (first match wins; new entries are
+    appended, there is no way to move one yet).
+  - Optionally seeding the list from Firefly's history (the most frequent category
+    per counterparty) - deliberately left out for now: Firefly has no
+    counterparty field, only expense accounts, which can be numerous.

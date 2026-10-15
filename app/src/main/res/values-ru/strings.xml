@@ -374,4 +374,25 @@
     <string name="about_diagnostic_clear">Очистить журнал</string>
     <string name="about_diagnostic_copied">Диагностический журнал скопирован</string>
     <string name="about_diagnostic_empty">Диагностический журнал пуст</string>
+
+    <string name="settings_auto_categories_title">Авто-категории</string>
+    <string name="settings_auto_categories_subtitle">Запоминает категорию магазина и подставляет её в следующий раз</string>
+    <string name="auto_categories_learn">Учиться на моих правках категории</string>
+    <string name="auto_categories_learn_hint">Если включено, категория, которую вы выбрали или изменили у транзакции, запоминается для её контрагента - один раз. Категория из правила всегда главнее, а платёж, в уведомлении которого нет контрагента, не запоминается. Если вы потом измените запомненную категорию, эта запись будет отключена; поправьте её здесь.</string>
+    <string name="auto_categories_empty">Пока нет записей. Включите обучение или добавьте запись кнопкой +.</string>
+    <string name="auto_categories_add">Добавить запись</string>
+    <string name="auto_categories_edit_title">Изменить запись</string>
+    <string name="auto_categories_field_key">Контрагент</string>
+    <string name="auto_categories_field_match">Сравнение</string>
+    <string name="auto_categories_match_equals">Равно</string>
+    <string name="auto_categories_match_contains">Содержит</string>
+    <string name="auto_categories_field_category">Категория</string>
+    <string name="auto_categories_key_required">Введите контрагента.</string>
+    <string name="auto_categories_category_required">Введите категорию.</string>
+    <string name="auto_categories_duplicate">Запись для этого контрагента уже есть.</string>
+    <string name="auto_categories_origin_learned">выучена</string>
+    <string name="auto_categories_origin_manual">добавлена вами</string>
+    <string name="auto_categories_row_detail">%1$s · %2$s</string>
+    <string name="auto_categories_active">Подставлять эту категорию</string>
+    <string name="auto_categories_delete_confirm_title">Удалить «%1$s»?</string>
 </resources>

@@ -3731,3 +3731,9 @@ this is a map lookup in the engine.
   edit mode (no draft) opens with the stored transaction's own category and matches the message again
   (`findCounterpartyForLearning`) for the counterparty - no match or no group means nothing is learned.
   Automatic creation never learns (no human edit); it only benefits from the list.
+- **Settings screen** (`ui.AutoCategoriesFragment`, a row in the settings root): the learning switch
+  (off by default), then the list - key, category, "Equals/Contains - learned/added by you", a
+  per-row switch (off = do not substitute) and an overflow menu (delete). Tap a row or "+" for the
+  edit dialog (counterparty, match, category with Firefly's category suggestions; a new entry
+  defaults to Contains). Everything applies at once, like the Currencies list - no Save button.
+  Reordering typed-in entries (first match wins) is not built; new ones are appended.

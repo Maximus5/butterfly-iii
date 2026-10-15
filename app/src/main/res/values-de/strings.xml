@@ -372,4 +372,25 @@
     <string name="about_diagnostic_clear">Protokoll löschen</string>
     <string name="about_diagnostic_copied">Diagnoseprotokoll kopiert</string>
     <string name="about_diagnostic_empty">Das Diagnoseprotokoll ist leer</string>
+
+    <string name="settings_auto_categories_title">Auto-Kategorien</string>
+    <string name="settings_auto_categories_subtitle">Merkt sich die Kategorie eines Händlers und trägt sie beim nächsten Mal ein</string>
+    <string name="auto_categories_learn">Aus meinen Kategorie-Änderungen lernen</string>
+    <string name="auto_categories_learn_hint">Wenn aktiv, wird eine Kategorie, die Sie bei einer Buchung wählen oder ändern, für den Empfänger gemerkt - einmalig. Die Kategorie einer Regel hat immer Vorrang, und eine Zahlung, deren Benachrichtigung keinen Empfänger nennt, wird nie gelernt. Ändern Sie eine gemerkte Kategorie später, wird dieser Eintrag ausgeschaltet; passen Sie ihn hier an.</string>
+    <string name="auto_categories_empty">Noch keine Einträge. Lernen einschalten oder mit + einen hinzufügen.</string>
+    <string name="auto_categories_add">Eintrag hinzufügen</string>
+    <string name="auto_categories_edit_title">Eintrag bearbeiten</string>
+    <string name="auto_categories_field_key">Empfänger</string>
+    <string name="auto_categories_field_match">Vergleich</string>
+    <string name="auto_categories_match_equals">Ist gleich</string>
+    <string name="auto_categories_match_contains">Enthält</string>
+    <string name="auto_categories_field_category">Kategorie</string>
+    <string name="auto_categories_key_required">Empfänger eingeben.</string>
+    <string name="auto_categories_category_required">Kategorie eingeben.</string>
+    <string name="auto_categories_duplicate">Für diesen Empfänger gibt es schon einen Eintrag.</string>
+    <string name="auto_categories_origin_learned">gelernt</string>
+    <string name="auto_categories_origin_manual">von Ihnen hinzugefügt</string>
+    <string name="auto_categories_row_detail">%1$s · %2$s</string>
+    <string name="auto_categories_active">Diese Kategorie eintragen</string>
+    <string name="auto_categories_delete_confirm_title">„%1$s“ löschen?</string>
 </resources>

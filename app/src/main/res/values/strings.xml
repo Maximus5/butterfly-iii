@@ -372,4 +372,25 @@
     <string name="about_diagnostic_clear">Clear log</string>
     <string name="about_diagnostic_copied">Diagnostic log copied</string>
     <string name="about_diagnostic_empty">The diagnostic log is empty</string>
+
+    <string name="settings_auto_categories_title">Auto categories</string>
+    <string name="settings_auto_categories_subtitle">Remember which category a shop gets and fill it in next time</string>
+    <string name="auto_categories_learn">Learn from my category edits</string>
+    <string name="auto_categories_learn_hint">When on, a category you choose or change on a transaction is remembered for its counterparty - once. A rule\'s own category always wins, and a payment whose notification names no counterparty is never learned. If you later change a remembered category, that entry is switched off; adjust it here.</string>
+    <string name="auto_categories_empty">No entries yet. Turn learning on, or add one with +.</string>
+    <string name="auto_categories_add">Add entry</string>
+    <string name="auto_categories_edit_title">Edit entry</string>
+    <string name="auto_categories_field_key">Counterparty</string>
+    <string name="auto_categories_field_match">Match</string>
+    <string name="auto_categories_match_equals">Equals</string>
+    <string name="auto_categories_match_contains">Contains</string>
+    <string name="auto_categories_field_category">Category</string>
+    <string name="auto_categories_key_required">Enter the counterparty.</string>
+    <string name="auto_categories_category_required">Enter a category.</string>
+    <string name="auto_categories_duplicate">An entry for this counterparty already exists.</string>
+    <string name="auto_categories_origin_learned">learned</string>
+    <string name="auto_categories_origin_manual">added by you</string>
+    <string name="auto_categories_row_detail">%1$s · %2$s</string>
+    <string name="auto_categories_active">Fill in this category</string>
+    <string name="auto_categories_delete_confirm_title">Delete \"%1$s\"?</string>
 </resources>
