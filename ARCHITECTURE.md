@@ -3699,3 +3699,30 @@ counterparties or account names - rule labels, flags, counts, Firefly transactio
 offsets and the first 6 characters of dedup hashes (enough to compare two; a hash prefix of amount +
 currency could in principle be brute-forced back to the amount, which is why it is opt-in and the log
 leaves the device only when the user copies it). Logging never throws.
+
+## Auto categories
+
+A counterparty -> category list that fills in a category the rule did not give, so a shop the user
+categorized once is categorized on its own afterwards (also by automatic creation, which has no
+human to ask). Firefly's own category rules were the model, but they slow down when there are many;
+this is a map lookup in the engine.
+
+- **Key**: only the rule's named group `counterparty` (`Groups.COUNTERPARTY`), whitespace-trimmed /
+  collapsed and lower-cased (`normalizeCounterpartyKey`). Not the description, not the destination
+  account: the user's decision, so a rule has to name the group exactly that to take part. A message
+  without the group neither learns nor gets a category.
+- **Model** (`rules.AutoCategories`, pure, unit-tested): `AutoCategoryEntry(key, match, category,
+  active, learned)`; `match` is `EQUALS` (learned) or `CONTAINS` (typed in by the user). Lookup
+  (`categoryFor`): an exact entry decides alone - active or not, so a switched-off exact entry also
+  beats a broader contains entry; then active contains entries in list order.
+- **Applied** in `RuleEngine.buildDraft`: `category = ruleCategory ?: autoCategories.categoryFor(
+  counterparty)`. The rule's own category template always wins. The draft carries `counterparty` and
+  `categoryFromRule` so the screens know what to learn from. The list reaches the engine as plain
+  data (`posting.RuleMatching.buildEngine`), like the other injected settings.
+- **Learned** (`AutoCategories.afterCategoryEdit`, stored through `AutoCategoriesPrefs.recordEdit`)
+  only when the switch is on, the saved category differs from the one the editor opened with, the
+  rule set no category and the counterparty is known: no entry yet -> a new `EQUALS` entry (once);
+  an active entry whose category was changed -> switched off (the counterparty evidently varies);
+  an inactive entry -> left alone, the settings screen is where it is fixed.
+- **Storage**: own prefs file `auto_categories` (switch `learn_enabled`, `entries` as a JSON array),
+  in both Auto Backup rule sets.

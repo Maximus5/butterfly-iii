@@ -12,6 +12,7 @@
     <include domain="sharedpref" path="retention.xml" />
     <include domain="sharedpref" path="setup_checklist.xml" />
     <include domain="sharedpref" path="firefly_settings.xml" />
+    <include domain="sharedpref" path="auto_categories.xml" />
     <!-- Explicit, on top of the allowlist: SecureSettings' file must never be backed up. -->
     <exclude domain="sharedpref" path="firefly_connection.xml" />
 </full-backup-content>

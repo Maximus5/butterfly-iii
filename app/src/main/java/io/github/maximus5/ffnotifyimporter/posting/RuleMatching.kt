@@ -5,6 +5,7 @@ import androidx.work.Data
 import androidx.work.workDataOf
 import io.github.maximus5.ffnotifyimporter.data.CapturedMessage
 import io.github.maximus5.ffnotifyimporter.network.ExchangeRateClient
+import io.github.maximus5.ffnotifyimporter.prefs.AutoCategoriesPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.FireflyPrefs
 import io.github.maximus5.ffnotifyimporter.rules.CurrenciesDb
 import io.github.maximus5.ffnotifyimporter.rules.DraftIssue
@@ -43,7 +44,10 @@ fun capturedMessageFrom(data: Data): CapturedMessage = CapturedMessage(
 private fun buildEngine(context: Context, prefs: FireflyPrefs): RuleEngine {
     val rules = RulesDb.getInstance(context).loadAllOrdered().withBuiltIns(prefs.isBuiltInRulesEnabled())
     val currencySymbols = CurrenciesDb.getInstance(context).symbolToCodeMap()
-    return RuleEngine(rules, currencySymbols, prefs.getAllTransactionsTags(), prefs.getDefaultAccountCurrency(), prefs.getDefaultSourceAccount())
+    return RuleEngine(
+        rules, currencySymbols, prefs.getAllTransactionsTags(), prefs.getDefaultAccountCurrency(),
+        prefs.getDefaultSourceAccount(), AutoCategoriesPrefs(context).load(),
+    )
 }
 
 /**

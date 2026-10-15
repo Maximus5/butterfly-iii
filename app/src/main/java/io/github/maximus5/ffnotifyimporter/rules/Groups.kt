@@ -12,9 +12,12 @@ package io.github.maximus5.ffnotifyimporter.rules
  *                                      (e.g. "the charge will happen on 01.02.30") - only used
  *                                      when [ParseRule.dateFormat] is also set, see its KDoc.
  *
- * Nothing else is privileged - e.g. a `counterparty` group isn't special to `RuleEngine`, it's
- * just another name available to `{macro}` templates (description/notes/category/tags) via
- * [renderTemplate]. `source`/`destination` are always [ParseRule.sourceAccountName]/
+ * `counterparty`                   - who was paid / who paid. Also an ordinary `{macro}` name for the
+ *                                      templates, but this exact name is what "Auto categories"
+ *                                      ([AutoCategories]) keys on: a rule that names the group
+ *                                      differently never learns or gets a learned category.
+ *
+ * Nothing else is privileged. `source`/`destination` are always [ParseRule.sourceAccountName]/
  * [ParseRule.destinationAccountName] as configured - never auto-filled from a regex capture.
  */
 object Groups {
@@ -23,4 +26,5 @@ object Groups {
     const val FOREIGN_AMOUNT = "foreignAmount"
     const val FOREIGN_CURRENCY = "foreignCurrency"
     const val DATE = "date"
+    const val COUNTERPARTY = "counterparty"
 }

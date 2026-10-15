@@ -45,6 +45,11 @@ private val whitespaceRun = Regex("\\s+")
  * screen, the test-match dialog) sees the same account. The draft still carries
  * [DraftIssue.ACCOUNT_SELECTION_REQUIRED] in that case - the rule itself didn't name an account,
  * so automatic creation keeps stopping at a review notification instead of posting on its own.
+ *
+ * [autoCategories] - the counterparty -> category list: when a rule's own category template yields
+ * nothing and the rule captured a `counterparty` group ([Groups.COUNTERPARTY]), the category comes
+ * from here ([AutoCategories.categoryFor]). The rule's own category always wins. Same injected-data
+ * shape as the parameters above.
  */
 class RuleEngine(
     private val rules: List<ParseRule>,
@@ -52,6 +57,7 @@ class RuleEngine(
     private val allTransactionsTags: String = "",
     private val defaultAccountCurrency: String = "",
     private val defaultSourceAccount: String = "",
+    private val autoCategories: AutoCategories = AutoCategories.EMPTY,
 ) {
 
     fun match(message: CapturedMessage): ParseOutcome {
@@ -127,6 +133,9 @@ class RuleEngine(
             .filter { it.isNotEmpty() && it !in ruleTags }
         val tags = ruleTags + extraTags
 
+        val ruleCategory = renderOptional(rule.categoryTemplate)
+        val counterparty = groups[Groups.COUNTERPARTY]?.replace(whitespaceRun, " ")?.trim()?.takeIf { it.isNotEmpty() }
+
         var sourceName = renderOptional(rule.sourceAccountName)
         var destinationName = renderOptional(rule.destinationAccountName)
         val missingSource = rule.kind != RuleKind.DEPOSIT && sourceName == null
@@ -150,10 +159,12 @@ class RuleEngine(
             destinationAccountId = null,
             description = renderTemplate(rule.descriptionTemplate, groups, message.title, message.text),
             notes = renderTemplate(rule.notesTemplate, groups, message.title, message.text),
-            category = renderOptional(rule.categoryTemplate),
+            category = ruleCategory ?: autoCategories.categoryFor(counterparty),
             tags = tags,
             issues = issues,
             ruleLabel = rule.label.takeIf { it.isNotBlank() },
+            counterparty = counterparty,
+            categoryFromRule = ruleCategory != null,
         )
     }
 }

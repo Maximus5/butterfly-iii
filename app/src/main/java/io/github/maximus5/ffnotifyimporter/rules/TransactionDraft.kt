@@ -63,4 +63,10 @@ data class TransactionDraft(
     /** Label of the rule this draft came from, for display only (notifications, the transaction
      * screen) and for `CapturedMessage.appliedRuleLabel`; null if the rule has no label. */
     val ruleLabel: String? = null,
+    /** The rule's captured `counterparty` group (whitespace-normalized), null if it has none. The
+     * key "Auto categories" learns and looks up by. */
+    val counterparty: String? = null,
+    /** True when the rule's own category template produced [category] - then Auto categories
+     * neither substituted nor may learn from an edit of it. */
+    val categoryFromRule: Boolean = false,
 )
