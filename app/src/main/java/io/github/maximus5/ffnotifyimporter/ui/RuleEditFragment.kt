@@ -27,10 +27,12 @@ import io.github.maximus5.ffnotifyimporter.network.FireflyApiClient
 import io.github.maximus5.ffnotifyimporter.posting.FireflySuggestions
 import io.github.maximus5.ffnotifyimporter.notifications.AppLabelResolver
 import io.github.maximus5.ffnotifyimporter.parser.namedGroupNames
+import io.github.maximus5.ffnotifyimporter.prefs.AutoCategoriesPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.FireflyPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.MonitoredAppsPrefs
 import io.github.maximus5.ffnotifyimporter.rules.CurrenciesDb
 import io.github.maximus5.ffnotifyimporter.rules.FIXED_MACROS
+import io.github.maximus5.ffnotifyimporter.rules.Groups
 import io.github.maximus5.ffnotifyimporter.rules.ParseOutcome
 import io.github.maximus5.ffnotifyimporter.rules.ParseRule
 import io.github.maximus5.ffnotifyimporter.rules.RuleEngine
@@ -102,6 +104,17 @@ class RuleEditFragment : Fragment() {
             }
     }
 
+    /** A soft note under the category template: learning is on, the rule sets no category itself, but
+     * its pattern has no `counterparty` group, so nothing is learned from it (and no learned category
+     * is applied; typed-in "contains" entries still match the notification text). */
+    private fun updateCounterpartyHint() {
+        val binding = binding ?: return
+        val missing = AutoCategoriesPrefs(requireContext()).isLearnEnabled() &&
+            binding.categoryTemplateInput.text.isNullOrBlank() &&
+            !binding.patternInput.text.toString().contains("(?<${Groups.COUNTERPARTY}>")
+        binding.categoryTemplateLayout.helperText = if (missing) getString(R.string.rule_no_counterparty_group_hint) else null
+    }
+
     /** Best-effort and silent: the category and tags template fields offer Firefly's existing names
      * while typing (the shared [FireflySuggestions] cache), and the asset-side account fields offer
      * Firefly's asset accounts. A template may also hold `{macros}`, so the lists are only a
@@ -141,8 +154,13 @@ class RuleEditFragment : Fragment() {
         binding.patternInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-            override fun afterTextChanged(s: Editable?) = updateAvailableMacros()
+            override fun afterTextChanged(s: Editable?) {
+                updateAvailableMacros()
+                updateCounterpartyHint()
+            }
         })
+        binding.categoryTemplateInput.doAfterTextChanged { updateCounterpartyHint() }
+        updateCounterpartyHint()
 
         binding.pickMessageButton.setOnClickListener { showMessagePicker() }
         binding.patternLayout.setEndIconOnClickListener { showPatternPicker() }

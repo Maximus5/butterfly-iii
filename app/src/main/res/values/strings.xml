@@ -397,4 +397,8 @@
     <string name="auto_categories_field_active_hint">Off: this counterparty gets no automatic category (and nothing below it in the list applies).</string>
     <string name="auto_categories_not_filled">No category is filled in</string>
     <string name="auto_categories_delete_selected_confirm_title">Delete %1$d entries?</string>
+    <string name="auto_categories_field_keep">Keep this category</string>
+    <string name="auto_categories_field_keep_hint">On: this is the counterparty\'s main category. Changing it on a single transaction is treated as a one-off and does not switch the entry off or add an exception.</string>
+    <string name="auto_categories_row_keep">keeps category</string>
+    <string name="rule_no_counterparty_group_hint">Learning is on, but this pattern has no (?&lt;counterparty&gt;…) group, so nothing is learned from it. Typed-in \"Contains\" entries still apply to the notification text.</string>
 </resources>

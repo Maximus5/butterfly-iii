@@ -3714,8 +3714,13 @@ this is a map lookup in the engine.
 
 - **Key**: only the rule's named group `counterparty` (`Groups.COUNTERPARTY`), whitespace-trimmed /
   collapsed and lower-cased (`normalizeCounterpartyKey`). Not the description, not the destination
-  account: the user's decision, so a rule has to name the group exactly that to take part. A message
-  without the group neither learns nor gets a category.
+  account, not the notification title (it is often just "Payment made" or the app's name): the user's
+  decision, so a rule has to name the group exactly that to take part. A message without the group
+  never *learns*; for *applying* a category it falls back to `AutoCategories.categoryForText`: only
+  `CONTAINS` entries, compared with title + text together, same first-match semantics. That is what
+  lets typed-in entries ("rewe") work with the built-in rules, which capture no counterparty. The rule
+  editor shows a soft hint under the category template when learning is on and the pattern has no
+  such group.
 - **Model** (`rules.AutoCategories`, pure, unit-tested): `AutoCategoryEntry(key, match, category,
   active, learned)`; `match` is `EQUALS` (learned) or `CONTAINS` (typed in by the user). **List order
   is the priority, exactly like the parse rules**: `categoryFor` returns the category of the *first*
@@ -3733,7 +3738,9 @@ this is a map lookup in the engine.
   none -> a new `EQUALS` entry at the end of the list (once); a switched-off entry or one that
   already has this category -> nothing; an exact entry whose category was changed -> switched off
   (the counterparty evidently varies); a typed-in "contains" entry -> left alone, and a new exact
-  entry (the correction, or "no category") is inserted right above it so the exception wins.
+  entry (the correction, or "no category") is inserted right above it so the exception wins. An entry
+  with `keep = true` ("Keep this category" in the dialog, off by default - "this is the main category,
+  a differing transaction is a one-off") is never touched by an edit: no switching off, no exception.
 - **Storage**: own prefs file `auto_categories` (switch `learn_enabled`, `entries` as a JSON array),
   in both Auto Backup rule sets.
 - **Where learning happens**: `ui.CreateTransactionFragment.onSaveSuccess`, create and edit mode alike.

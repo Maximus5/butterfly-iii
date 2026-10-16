@@ -21,6 +21,9 @@ enum class CategoryMatch {
  * ([AutoCategories.afterCategoryEdit]). Such an entry still *matches* - it stops the search, so
  * nothing further down the list applies to that counterparty and it is not learned again - and its
  * [category] may be blank. [learned] only tells the list screen where the entry came from.
+ *
+ * [keep] = true: "this is the counterparty's main category" - a transaction edited away from it is a
+ * one-off, so the entry is left exactly as it is ([AutoCategories.afterCategoryEdit] changes nothing).
  */
 data class AutoCategoryEntry(
     val key: String,
@@ -28,6 +31,7 @@ data class AutoCategoryEntry(
     val category: String,
     val active: Boolean = true,
     val learned: Boolean = true,
+    val keep: Boolean = false,
 )
 
 private val whitespaceRun = Regex("\\s+")
@@ -69,6 +73,19 @@ class AutoCategories(val entries: List<AutoCategoryEntry>) {
     }
 
     /**
+     * The category for a message whose rule captured no `counterparty` (e.g. the built-in rules): only
+     * "contains" entries can apply - an exact key never equals a whole notification - and they are
+     * compared with the title and text together. Same first-match-wins / switched-off semantics as
+     * [categoryFor]. Never learns anything; the key is whatever the user typed.
+     */
+    fun categoryForText(title: String, text: String): String? {
+        val haystack = normalizeCounterpartyKey("$title $text")
+        if (haystack.isEmpty()) return null
+        val hit = entries.firstOrNull { it.match == CategoryMatch.CONTAINS && it.matches(haystack) } ?: return null
+        return hit.category.takeIf { hit.active && it.isNotBlank() }
+    }
+
+    /**
      * What the entries become after the user saved a transaction, or null for "no change".
      *
      * Only an edit counts ([categoryEdited]: the saved category differs from the one the editor
@@ -76,8 +93,8 @@ class AutoCategories(val entries: List<AutoCategoryEntry>) {
      * ([ruleSetCategory] - that is the rule's call, not an ambiguity of the counterparty). Then,
      * looking at the first entry that matches the counterparty:
      * - none: the category is learned (once) as a new entry at the end of the list;
-     * - it is switched off, or already has this category: nothing changes (learning is once; the
-     *   user fixes entries in the settings);
+     * - it is switched off, marked [AutoCategoryEntry.keep], or already has this category: nothing
+     *   changes (learning is once; the user fixes entries in the settings);
      * - an exact entry whose category the user just changed: it is switched off - the same
      *   counterparty evidently does not always get this category;
      * - a typed-in "contains" entry: it is left as it is and a new exact entry (the correction, or
@@ -100,7 +117,7 @@ class AutoCategories(val entries: List<AutoCategoryEntry>) {
             return entries + AutoCategoryEntry(key, CategoryMatch.EQUALS, category, active = true, learned = true)
         }
         val hit = entries[index]
-        if (!hit.active || hit.category.equals(category, ignoreCase = true)) return null
+        if (!hit.active || hit.keep || hit.category.equals(category, ignoreCase = true)) return null
         if (hit.match == CategoryMatch.EQUALS) {
             return entries.toMutableList().also { it[index] = hit.copy(active = false) }
         }
@@ -151,7 +168,8 @@ fun autoCategoriesToJson(entries: List<AutoCategoryEntry>): JSONArray = JSONArra
                 .put("match", it.match.name)
                 .put("category", it.category)
                 .put("active", it.active)
-                .put("learned", it.learned),
+                .put("learned", it.learned)
+                .put("keep", it.keep),
         )
     }
 }
@@ -172,6 +190,6 @@ fun autoCategoriesFromJson(array: JSONArray?): List<AutoCategoryEntry> {
         } catch (e: IllegalArgumentException) {
             return@mapNotNull null
         }
-        AutoCategoryEntry(key, match, category, active, o.optBoolean("learned", true))
+        AutoCategoryEntry(key, match, category, active, o.optBoolean("learned", true), o.optBoolean("keep", false))
     }
 }

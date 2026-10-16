@@ -119,6 +119,43 @@ class AutoCategoriesTest {
     }
 
     @Test
+    fun `a kept entry ignores edits - no switching off, no exception`() {
+        val keptExact = AutoCategories(listOf(exact("Shop1234", "Food").copy(keep = true)))
+        assertNull(keptExact.afterCategoryEdit("Shop1234", "Clothes", true, false, true))
+        val keptContains = AutoCategories(listOf(contains("cafe", "Restaurants").copy(keep = true)))
+        assertNull(keptContains.afterCategoryEdit("Cafe Corner", "Groceries", true, false, true))
+        // Still applied as usual, and the flag survives the JSON round trip (absent = off).
+        assertEquals("Food", keptExact.categoryFor("Shop1234"))
+        assertEquals(keptExact.entries, autoCategoriesFromJson(autoCategoriesToJson(keptExact.entries)))
+        assertFalse(autoCategoriesFromJson(JSONArray("""[{"key":"k","category":"X"}]""")).single().keep)
+    }
+
+    @Test
+    fun `without a counterparty only contains entries apply, to the title and text`() {
+        val categories = AutoCategories(
+            listOf(exact("rewe", "Wrong"), contains("amazon prime", "Entertainment"), contains("amazon", "", active = false), contains("rewe", "Food")),
+        )
+        assertEquals("Food", categories.categoryForText("Payment made", "You made a payment of 52.85 at  REWE Markt GmbH-Zw."))
+        assertEquals("Entertainment", categories.categoryForText("Amazon Prime", "Payment"))
+        assertNull(categories.categoryForText("Amazon", "Payment"))
+        assertNull(categories.categoryForText("Payment made", "at Shop1234"))
+    }
+
+    @Test
+    fun `the engine falls back to the notification text for a rule without a counterparty group`() {
+        val rule = ParseRule(
+            id = "r", label = "Default", packageNames = emptySet(), kind = RuleKind.WITHDRAWAL,
+            sourceAccountName = "Bank Account A", destinationAccountName = "",
+            homeCurrency = "EUR", pattern = """(?<amount>\d+,\d+) EUR""", descriptionTemplate = "{title}", notesTemplate = "",
+            categoryTemplate = "", tagsTemplate = "", enabled = true, dateFormat = "", accountApproximate = false,
+        )
+        val message = CapturedMessage("bank.app", "Bank", "Payment", "You paid 12,50 EUR at REWE Markt", 1000)
+        val draft = (RuleEngine(listOf(rule), autoCategories = AutoCategories(listOf(contains("rewe", "Food")))).match(message) as ParseOutcome.Matched).draft
+        assertEquals("Food", draft.category)
+        assertNull(draft.counterparty)
+    }
+
+    @Test
     fun `moving the selection up or down keeps blocks at the edge in place`() {
         val items = listOf("a", "b", "c", "d", "e")
         assertEquals(listOf("b", "a", "c", "d", "e") to setOf(0), moveSelected(items, setOf(1), up = true))

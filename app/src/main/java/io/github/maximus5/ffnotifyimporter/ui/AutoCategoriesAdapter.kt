@@ -87,7 +87,8 @@ class AutoCategoriesAdapter(
             val origin = context.getString(
                 if (entry.learned) R.string.auto_categories_origin_learned else R.string.auto_categories_origin_manual,
             )
-            binding.entryDetail.text = context.getString(R.string.auto_categories_row_detail, match, origin)
+            val detail = context.getString(R.string.auto_categories_row_detail, match, origin)
+            binding.entryDetail.text = if (entry.keep) "$detail · ${context.getString(R.string.auto_categories_row_keep)}" else detail
             binding.root.alpha = if (entry.active) 1f else 0.6f
             binding.root.setBackgroundColor(if (index in selected) SELECTED_BACKGROUND else Color.TRANSPARENT)
 

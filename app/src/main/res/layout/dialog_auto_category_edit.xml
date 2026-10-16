@@ -61,6 +61,7 @@
         android:id="@+id/categoryLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
         android:hint="@string/auto_categories_field_category"
         app:expandedHintEnabled="false">
 
@@ -73,5 +74,20 @@
             android:inputType="text" />
 
     </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/keepSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:checked="false"
+        android:text="@string/auto_categories_field_keep" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/auto_categories_field_keep_hint"
+        android:textColor="#888888"
+        android:textSize="13sp" />
 
 </LinearLayout>

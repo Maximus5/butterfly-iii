@@ -185,6 +185,7 @@ class AutoCategoriesFragment : Fragment() {
         dialogBinding.activeSwitch.isChecked = existing?.active ?: true
         applyActive(dialogBinding.activeSwitch.isChecked)
         dialogBinding.activeSwitch.setOnCheckedChangeListener { _, checked -> applyActive(checked) }
+        dialogBinding.keepSwitch.isChecked = existing?.keep ?: false
 
         val matches = listOf(CategoryMatch.EQUALS, CategoryMatch.CONTAINS)
         val labels = matches.map {
@@ -239,6 +240,7 @@ class AutoCategoriesFragment : Fragment() {
                 category = category,
                 active = active,
                 learned = existing?.learned ?: false,
+                keep = dialogBinding.keepSwitch.isChecked,
             )
             prefs.saveEntries(
                 if (index != null && existing != null) entries.toMutableList().also { it[index] = updated } else entries + updated,

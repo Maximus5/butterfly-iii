@@ -48,7 +48,9 @@ private val whitespaceRun = Regex("\\s+")
  *
  * [autoCategories] - the counterparty -> category list: when a rule's own category template yields
  * nothing and the rule captured a `counterparty` group ([Groups.COUNTERPARTY]), the category comes
- * from here ([AutoCategories.categoryFor]). The rule's own category always wins. Same injected-data
+ * from here ([AutoCategories.categoryFor]); a rule without that group falls back to the "contains"
+ * entries compared with the notification's text ([AutoCategories.categoryForText]). The rule's own
+ * category always wins. Same injected-data
  * shape as the parameters above.
  */
 class RuleEngine(
@@ -159,7 +161,9 @@ class RuleEngine(
             destinationAccountId = null,
             description = renderTemplate(rule.descriptionTemplate, groups, message.title, message.text),
             notes = renderTemplate(rule.notesTemplate, groups, message.title, message.text),
-            category = ruleCategory ?: autoCategories.categoryFor(counterparty),
+            category = ruleCategory
+                ?: if (counterparty != null) autoCategories.categoryFor(counterparty)
+                else autoCategories.categoryForText(message.title, message.text),
             tags = tags,
             issues = issues,
             ruleLabel = rule.label.takeIf { it.isNotBlank() },
