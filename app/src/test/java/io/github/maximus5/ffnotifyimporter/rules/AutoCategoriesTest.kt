@@ -109,6 +109,16 @@ class AutoCategoriesTest {
     }
 
     @Test
+    fun `a key cut down to a part of itself is detected`() {
+        assertTrue(keyShortenedToPart("amzn mktp, de", "amzn mktp"))
+        assertTrue(keyShortenedToPart("amzn mktp, de", " MKTP "))
+        assertFalse(keyShortenedToPart("amzn mktp, de", "amzn mktp, de"))
+        assertFalse(keyShortenedToPart("amzn mktp, de", ""))
+        assertFalse(keyShortenedToPart("amzn mktp, de", "amazon"))
+        assertFalse(keyShortenedToPart("amzn", "amzn mktp"))
+    }
+
+    @Test
     fun `moving the selection up or down keeps blocks at the edge in place`() {
         val items = listOf("a", "b", "c", "d", "e")
         assertEquals(listOf("b", "a", "c", "d", "e") to setOf(0), moveSelected(items, setOf(1), up = true))

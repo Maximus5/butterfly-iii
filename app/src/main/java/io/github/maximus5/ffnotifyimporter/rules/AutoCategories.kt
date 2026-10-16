@@ -36,6 +36,16 @@ private val whitespaceRun = Regex("\\s+")
  * (punctuation, store numbers) is touched - the user shortens a key by editing the entry. */
 fun normalizeCounterpartyKey(raw: String): String = raw.replace(whitespaceRun, " ").trim().lowercase()
 
+/**
+ * True when an exact ("equals") entry's key was cut down to a shorter part of itself - such an entry
+ * could never match again, so the edit dialog switches it to "contains".
+ */
+fun keyShortenedToPart(originalKey: String, editedKey: String): Boolean {
+    val edited = normalizeCounterpartyKey(editedKey)
+    val original = normalizeCounterpartyKey(originalKey)
+    return edited.isNotEmpty() && edited.length < original.length && original.contains(edited)
+}
+
 private fun AutoCategoryEntry.matches(normalizedCounterparty: String): Boolean = when (match) {
     CategoryMatch.EQUALS -> key == normalizedCounterparty
     CategoryMatch.CONTAINS -> key.isNotEmpty() && normalizedCounterparty.contains(key)

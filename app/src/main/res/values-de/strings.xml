@@ -384,6 +384,7 @@
     <string name="auto_categories_field_match">Vergleich</string>
     <string name="auto_categories_match_equals">Ist gleich</string>
     <string name="auto_categories_match_contains">Enthält</string>
+    <string name="auto_categories_match_switched_hint">Der Schlüssel wurde kürzer, daher wurde der Modus auf Enthält gestellt (ein exakter Treffer würde nie greifen).</string>
     <string name="auto_categories_field_category">Kategorie</string>
     <string name="auto_categories_key_required">Empfänger eingeben.</string>
     <string name="auto_categories_category_required">Kategorie eingeben.</string>

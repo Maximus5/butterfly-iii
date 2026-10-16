@@ -3750,6 +3750,10 @@ this is a map lookup in the engine.
   match (a new entry defaults to Contains), the "Fill in the category" switch - off disables the
   category field and it is then not required - and the category with Firefly's suggestions. Everything
   applies at once, like the Currencies list - no Save button.
+  Editing an `EQUALS` entry's key down to a shorter part of itself (`rules.keyShortenedToPart`, e.g.
+  dropping a ", de" tail) switches Match to Contains on the spot, with a hint under the field, because
+  the exact entry could never match again; picking a mode by hand turns the auto-switch off for that
+  dialog.
 - **Backups**: the `auto_categories` prefs file is in both Auto Backup rule sets, and the manual JSON
   backup carries the list (`FullBackupData.autoCategories`, null in a file from before - restore then
   keeps the current list) and the learning switch (`BackupSettings.autoCategoriesLearn`).

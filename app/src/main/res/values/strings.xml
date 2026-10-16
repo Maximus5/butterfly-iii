@@ -384,6 +384,7 @@
     <string name="auto_categories_field_match">Match</string>
     <string name="auto_categories_match_equals">Equals</string>
     <string name="auto_categories_match_contains">Contains</string>
+    <string name="auto_categories_match_switched_hint">The key got shorter, so the match mode was changed to Contains (an exact match would never fire).</string>
     <string name="auto_categories_field_category">Category</string>
     <string name="auto_categories_key_required">Enter the counterparty.</string>
     <string name="auto_categories_category_required">Enter a category.</string>

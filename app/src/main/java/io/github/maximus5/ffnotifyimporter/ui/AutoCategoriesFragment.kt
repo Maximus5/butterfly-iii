@@ -11,6 +11,7 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuProvider
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +25,7 @@ import io.github.maximus5.ffnotifyimporter.prefs.AutoCategoriesPrefs
 import io.github.maximus5.ffnotifyimporter.prefs.FireflyPrefs
 import io.github.maximus5.ffnotifyimporter.rules.AutoCategoryEntry
 import io.github.maximus5.ffnotifyimporter.rules.CategoryMatch
+import io.github.maximus5.ffnotifyimporter.rules.keyShortenedToPart
 import io.github.maximus5.ffnotifyimporter.rules.moveSelected
 import io.github.maximus5.ffnotifyimporter.rules.normalizeCounterpartyKey
 import kotlinx.coroutines.launch
@@ -191,7 +193,24 @@ class AutoCategoriesFragment : Fragment() {
         var match = existing?.match ?: CategoryMatch.CONTAINS
         dialogBinding.matchInput.setSimpleItems(labels.toTypedArray())
         dialogBinding.matchInput.setText(labels[matches.indexOf(match)], false)
-        dialogBinding.matchInput.setOnItemClickListener { _, _, position, _ -> match = matches[position] }
+        // Cutting an exact key down to a part of itself (e.g. dropping a ", de" tail) would make the
+        // entry unmatchable: switch to "contains" with a hint, unless the user already chose a mode.
+        var matchChosenByUser = false
+        dialogBinding.matchInput.setOnItemClickListener { _, _, position, _ ->
+            match = matches[position]
+            matchChosenByUser = true
+            dialogBinding.matchLayout.helperText = null
+        }
+        if (existing != null && existing.match == CategoryMatch.EQUALS) {
+            dialogBinding.keyInput.doAfterTextChanged { text ->
+                if (matchChosenByUser || match != CategoryMatch.EQUALS) return@doAfterTextChanged
+                if (keyShortenedToPart(existing.key, text?.toString().orEmpty())) {
+                    match = CategoryMatch.CONTAINS
+                    dialogBinding.matchInput.setText(labels[matches.indexOf(match)], false)
+                    dialogBinding.matchLayout.helperText = getString(R.string.auto_categories_match_switched_hint)
+                }
+            }
+        }
 
         // Cancel always rightmost/last (house convention, AGENTS.md) - Save sits in the negative slot.
         val dialog = AlertDialog.Builder(requireContext())

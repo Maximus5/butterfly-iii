@@ -386,6 +386,7 @@
     <string name="auto_categories_field_match">Сравнение</string>
     <string name="auto_categories_match_equals">Равно</string>
     <string name="auto_categories_match_contains">Содержит</string>
+    <string name="auto_categories_match_switched_hint">Ключ стал короче, поэтому режим сопоставления изменён на «Содержит» (точное совпадение уже не сработает).</string>
     <string name="auto_categories_field_category">Категория</string>
     <string name="auto_categories_key_required">Введите контрагента.</string>
     <string name="auto_categories_category_required">Введите категорию.</string>
