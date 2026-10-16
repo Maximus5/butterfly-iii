@@ -2534,7 +2534,12 @@ Single `:app` module, packages under
     `onFilterComplete(0)` instead), and unregistering a `DataSetObserver`
     from inside its own notification crashes (`IndexOutOfBounds` in
     `DataSetObservable`); (3) rows must be measured with the row's own
-    `layout_height`, `View.measure` ignores it. **Accounts (v0.236)**:
+    `layout_height`, `View.measure` ignores it. (4) inside a dialog the list used
+    to land on the keyboard: `showAtLocation` coordinates are relative to the *parent window* (the
+    dialog's smaller, offset window, not the screen), and neither `getWindowVisibleDisplayFrame` nor
+    the IME inset described the keyboard there. The list is now placed relative to the field's own
+    window and its room is limited to that window (plus the IME inset when an activity dispatches one);
+    the system keeps a dialog above the keyboard, so staying inside it keeps the list off the keyboard. **Accounts (v0.236)**:
     the two account fields of the create/edit screen use the same view
     and suggest the user's *asset* accounts (`FireflySuggestions.
     assetAccounts` - the same cache the account picker now uses), on the

@@ -155,12 +155,18 @@ open class SuggestAutoCompleteTextView @JvmOverloads constructor(
         rootView.getLocationOnScreen(windowOrigin)
         val frame = Rect()
         rootView.getWindowVisibleDisplayFrame(frame)
-        // A dialog window does not always report its visible frame without the keyboard, so the
-        // IME inset is applied explicitly.
+        // The keyboard is not reliably visible from here: an activity window is edge-to-edge and
+        // never resized by it, and a dialog's visible frame still describes the whole screen. Two
+        // limits cover it. The IME inset (dispatched to an activity's root) is applied when it is
+        // there; and the list never leaves its own window - the system keeps a dialog above the
+        // keyboard, so staying inside the dialog's window keeps the list off the keyboard, while for
+        // an activity the window is the whole screen and this limit changes nothing.
         val imeHeight = ViewCompat.getRootWindowInsets(this)?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
-        val visibleBottom = if (imeHeight > 0) min(frame.bottom, resources.displayMetrics.heightPixels - imeHeight) else frame.bottom
+        var visibleBottom = min(frame.bottom, windowOrigin[1] + rootView.height)
+        if (imeHeight > 0) visibleBottom = min(visibleBottom, resources.displayMetrics.heightPixels - imeHeight)
+        val visibleTop = maxOf(frame.top, windowOrigin[1])
         val spaceBelow = visibleBottom - (location[1] + height)
-        val spaceAbove = location[1] - frame.top
+        val spaceAbove = location[1] - visibleTop
 
         // Side: the one with more room on the first show, then kept; re-chosen only if the kept side
         // has no room left for even one row (the field was scrolled or the keyboard changed).
