@@ -369,7 +369,7 @@
     <string name="rule_field_account_approximate_hint">Включите, если в уведомлении не сказано, какой счёт или карта использованы, и счёт выше — лишь догадка. Тогда приложение никогда не создаёт транзакцию само: оно просит вас проверить её. Оно также узнаёт тот же платёж из другого приложения, которое знает счёт (например, из кошелька), и убирает своё напоминание. Дубли ищутся только по сумме и времени.</string>
     <string name="notification_rule_line">Правило: %1$s</string>
     <string name="about_diagnostic_switch">Вести диагностический журнал</string>
-    <string name="about_diagnostic_hint">По умолчанию выключено. Когда включено, приложение записывает короткие технические заметки о том, что оно решило по каждому сообщению: названия ваших правил, время, номера транзакций Firefly и короткий «отпечаток» каждой суммы (чтобы сравнить две) - но не сами суммы, описания и названия счетов. При выключении записи удаляются. Скопируйте их, если сообщаете о проблеме.</string>
+    <string name="about_diagnostic_hint">По умолчанию выключено. При выключении журнал удаляется. Скопируйте его, если сообщаете о проблеме.</string>
     <string name="about_diagnostic_copy">Скопировать диагностический журнал</string>
     <string name="about_diagnostic_clear">Очистить журнал</string>
     <string name="about_diagnostic_copied">Диагностический журнал скопирован</string>
@@ -403,4 +403,14 @@
     <string name="auto_categories_field_keep_hint">Включайте, если этот контрагент почти всегда получает эту категорию. Если вы измените её у отдельной транзакции, запись останется как есть: она не отключится и исключение не добавится.</string>
     <string name="auto_categories_row_keep">категория закреплена</string>
     <string name="rule_no_counterparty_group_hint">Обучение включено, но в шаблоне нет группы (?&lt;counterparty&gt;…), поэтому учиться на нём не получится. Записи «Содержит», введённые вручную, по-прежнему применяются к тексту уведомления.</string>
+    <string name="about_play_store_label">Play Store:</string>
+    <string name="about_play_store_link">Butterfly III в Google Play</string>
+    <string name="about_play_store_url">https://play.google.com/store/apps/details?id=io.github.maximus5.butterflyiii</string>
+    <string name="about_sources_label">Исходники:</string>
+    <string name="about_diagnostic_details_link">Что записывается?</string>
+    <string name="about_diagnostic_details_title">Диагностический журнал: что хранится</string>
+    <string name="about_diagnostic_written_title">Что записывается</string>
+    <string name="about_diagnostic_written">• какое правило сработало на каждое сообщение\n• была ли показана, подавлена или заменена нотификация Butterfly в шторке\n• проблемы, найденные в сообщении (например, не выбран счёт)\n• сколько найдено дубликатов и нотификаций в шторке\n• время событий и временные интервалы\n• ID транзакций Firefly\n• первые 6 символов SHA-256 хеша транзакции</string>
+    <string name="about_diagnostic_never_title">Никогда не записывается</string>
+    <string name="about_diagnostic_never">• суммы транзакций\n• описания и заметки\n• контрагенты\n• названия счетов</string>
 </resources>

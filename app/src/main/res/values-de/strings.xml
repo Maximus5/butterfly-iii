@@ -367,7 +367,7 @@
     <string name="rule_field_account_approximate_hint">Einschalten, wenn die Benachrichtigung nicht sagt, welches Konto oder welche Karte verwendet wurde, und das Konto oben nur geraten ist. Die App legt die Buchung dann nie selbst an, sondern bittet Sie um Prüfung. Außerdem erkennt sie dieselbe Zahlung aus einer App, die das Konto kennt (zum Beispiel Ihrem Wallet), und entfernt ihre eigene Erinnerung. Duplikate werden nur anhand von Betrag und Zeit gefunden.</string>
     <string name="notification_rule_line">Regel: %1$s</string>
     <string name="about_diagnostic_switch">Diagnoseprotokoll führen</string>
-    <string name="about_diagnostic_hint">Standardmäßig aus. Wenn aktiv, schreibt die App kurze technische Notizen dazu, was sie bei jeder Nachricht entschieden hat: Namen Ihrer Regeln, Zeiten, Firefly-Buchungsnummern und einen kurzen „Fingerabdruck“ jedes Betrags (zum Vergleichen zweier Beträge) - aber nicht die Beträge, Beschreibungen oder Kontonamen. Beim Ausschalten werden die Notizen gelöscht. Kopieren Sie sie, wenn Sie ein Problem melden.</string>
+    <string name="about_diagnostic_hint">Standardmäßig aus. Beim Ausschalten wird das Protokoll gelöscht. Kopieren Sie es, wenn Sie ein Problem melden.</string>
     <string name="about_diagnostic_copy">Diagnoseprotokoll kopieren</string>
     <string name="about_diagnostic_clear">Protokoll löschen</string>
     <string name="about_diagnostic_copied">Diagnoseprotokoll kopiert</string>
@@ -401,4 +401,14 @@
     <string name="auto_categories_field_keep_hint">Einschalten, wenn dieser Empfänger fast immer diese Kategorie bekommt. Ändern Sie sie bei einer einzelnen Buchung, bleibt der Eintrag unverändert, statt abgeschaltet zu werden oder eine Ausnahme zu bekommen.</string>
     <string name="auto_categories_row_keep">behält Kategorie</string>
     <string name="rule_no_counterparty_group_hint">Lernen ist an, aber dieses Muster hat keine (?&lt;counterparty&gt;…)-Gruppe, daher wird daraus nichts gelernt. Selbst angelegte „Enthält“-Einträge greifen weiterhin auf den Benachrichtigungstext.</string>
+    <string name="about_play_store_label">Play Store:</string>
+    <string name="about_play_store_link">Butterfly III bei Google Play</string>
+    <string name="about_play_store_url">https://play.google.com/store/apps/details?id=io.github.maximus5.butterflyiii</string>
+    <string name="about_sources_label">Quellen:</string>
+    <string name="about_diagnostic_details_link">Was wird geschrieben?</string>
+    <string name="about_diagnostic_details_title">Diagnoseprotokoll: was gespeichert wird</string>
+    <string name="about_diagnostic_written_title">Was geschrieben wird</string>
+    <string name="about_diagnostic_written">• welche Regel auf jede Nachricht gepasst hat\n• ob eine Butterfly-Benachrichtigung gesendet, unterdrückt oder ersetzt wurde\n• Probleme in einer Nachricht (zum Beispiel: kein Konto gewählt)\n• wie viele Duplikate und Benachrichtigungen im Benachrichtigungsfeld gefunden wurden\n• Zeiten von Ereignissen und Zeitabstände\n• Firefly-Buchungs-IDs\n• die ersten 6 Zeichen des SHA-256-Hashs jeder Buchung</string>
+    <string name="about_diagnostic_never_title">Nie geschrieben wird</string>
+    <string name="about_diagnostic_never">• Buchungsbeträge\n• Beschreibungen und Notizen\n• Empfänger\n• Kontonamen</string>
 </resources>

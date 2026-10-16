@@ -367,7 +367,7 @@
     <string name="rule_field_account_approximate_hint">Turn this on when the notification does not say which account or card was used, so the account above is only a guess. The app then never creates the transaction by itself: it asks you to review it. It also recognises the same payment reported by another app that knows the account (for example your wallet), and drops its own reminder. Duplicates are found by amount and time only.</string>
     <string name="notification_rule_line">Rule: %1$s</string>
     <string name="about_diagnostic_switch">Write diagnostic log</string>
-    <string name="about_diagnostic_hint">Off by default. When on, the app writes short technical notes about what it decided for each message: your rule names, times, Firefly transaction numbers and a short fingerprint of each amount (enough to compare two) - but not the amounts, descriptions or account names. Turning it off deletes the notes. Copy them if you report a problem.</string>
+    <string name="about_diagnostic_hint">Off by default. Turning it off deletes the log. Copy it when you report a problem.</string>
     <string name="about_diagnostic_copy">Copy diagnostic log</string>
     <string name="about_diagnostic_clear">Clear log</string>
     <string name="about_diagnostic_copied">Diagnostic log copied</string>
@@ -401,4 +401,14 @@
     <string name="auto_categories_field_keep_hint">Turn on if this counterparty almost always gets this category. When you change it on a single transaction, the entry is kept as it is instead of being switched off or getting an exception.</string>
     <string name="auto_categories_row_keep">keeps category</string>
     <string name="rule_no_counterparty_group_hint">Learning is on, but this pattern has no (?&lt;counterparty&gt;…) group, so nothing is learned from it. Typed-in \"Contains\" entries still apply to the notification text.</string>
+    <string name="about_play_store_label">Play Store:</string>
+    <string name="about_play_store_link">Butterfly III on Google Play</string>
+    <string name="about_play_store_url">https://play.google.com/store/apps/details?id=io.github.maximus5.butterflyiii</string>
+    <string name="about_sources_label">Sources:</string>
+    <string name="about_diagnostic_details_link">What is written?</string>
+    <string name="about_diagnostic_details_title">Diagnostic log: what is stored</string>
+    <string name="about_diagnostic_written_title">What is written</string>
+    <string name="about_diagnostic_written">• which rule matched each message\n• whether a Butterfly notification was posted, suppressed or replaced\n• problems found in a message (for example, no account selected)\n• how many duplicates and shade notifications were found\n• times of events and time offsets\n• Firefly transaction IDs\n• first 6 characters of each transaction\'s SHA-256 hash</string>
+    <string name="about_diagnostic_never_title">Never written</string>
+    <string name="about_diagnostic_never">• transaction amounts\n• descriptions and notes\n• counterparties\n• account names</string>
 </resources>
