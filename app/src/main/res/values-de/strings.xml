@@ -398,7 +398,7 @@
     <string name="auto_categories_not_filled">Es wird keine Kategorie eingetragen</string>
     <string name="auto_categories_delete_selected_confirm_title">%1$d Einträge löschen?</string>
     <string name="auto_categories_field_keep">Diese Kategorie beibehalten</string>
-    <string name="auto_categories_field_keep_hint">An: das ist die Hauptkategorie des Empfängers. Eine Änderung bei einer einzelnen Buchung gilt als Ausnahme und schaltet den Eintrag nicht ab und legt keine Ausnahme an.</string>
+    <string name="auto_categories_field_keep_hint">Einschalten, wenn dieser Empfänger fast immer diese Kategorie bekommt. Ändern Sie sie bei einer einzelnen Buchung, bleibt der Eintrag unverändert, statt abgeschaltet zu werden oder eine Ausnahme zu bekommen.</string>
     <string name="auto_categories_row_keep">behält Kategorie</string>
     <string name="rule_no_counterparty_group_hint">Lernen ist an, aber dieses Muster hat keine (?&lt;counterparty&gt;…)-Gruppe, daher wird daraus nichts gelernt. Selbst angelegte „Enthält“-Einträge greifen weiterhin auf den Benachrichtigungstext.</string>
 </resources>

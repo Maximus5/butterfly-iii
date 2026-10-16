@@ -400,7 +400,7 @@
     <string name="auto_categories_not_filled">Категория не подставляется</string>
     <string name="auto_categories_delete_selected_confirm_title">Удалить записей: %1$d?</string>
     <string name="auto_categories_field_keep">Оставлять эту категорию</string>
-    <string name="auto_categories_field_keep_hint">Включено: это основная категория контрагента. Правка у отдельной транзакции считается разовой: запись не отключается и исключение не добавляется.</string>
+    <string name="auto_categories_field_keep_hint">Включайте, если этот контрагент почти всегда получает эту категорию. Если вы измените её у отдельной транзакции, запись останется как есть: она не отключится и исключение не добавится.</string>
     <string name="auto_categories_row_keep">категория закреплена</string>
     <string name="rule_no_counterparty_group_hint">Обучение включено, но в шаблоне нет группы (?&lt;counterparty&gt;…), поэтому учиться на нём не получится. Записи «Содержит», введённые вручную, по-прежнему применяются к тексту уведомления.</string>
 </resources>
