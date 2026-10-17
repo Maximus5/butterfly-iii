@@ -1,7 +1,6 @@
 package io.github.maximus5.ffnotifyimporter.ui
 
 import android.content.ClipData
-import android.content.ActivityNotFoundException
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -50,16 +49,24 @@ class AboutFragment : Fragment() {
         binding.aboutGithubLink.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl)))
         }
-        // The Play Store app first (market:// is what an Android link should open); the web page when
-        // there is no Play Store app on the device.
+        // The https address, not market://: Android opens it in the Play Store app when there is one
+        // (and in the browser otherwise), and it is the same address that long press copies.
+        val playStoreUrl = getString(R.string.about_play_store_url)
         binding.aboutPlayStoreLink.setOnClickListener {
-            val packageName = requireContext().packageName
-            try {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
-            } catch (e: ActivityNotFoundException) {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.about_play_store_url))))
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(playStoreUrl)))
+        }
+
+        // Long press copies the address.
+        fun copyOnLongPress(view: View, url: String) {
+            view.setOnLongClickListener {
+                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Butterfly III link", url))
+                Toast.makeText(requireContext(), getString(R.string.about_link_copied, url), Toast.LENGTH_SHORT).show()
+                true
             }
         }
+        copyOnLongPress(binding.aboutGithubLink, githubUrl)
+        copyOnLongPress(binding.aboutPlayStoreLink, playStoreUrl)
 
         val context = requireContext()
         binding.aboutDiagnosticSwitch.isChecked = DiagnosticLog.isEnabled(context)

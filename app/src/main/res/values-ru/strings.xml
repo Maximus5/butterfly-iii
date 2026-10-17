@@ -418,4 +418,6 @@
     <string name="firefly_kind_tags">теги</string>
     <string name="firefly_kind_accounts">счета</string>
     <string name="firefly_kind_currencies">валюты</string>
+    <string name="about_link_copied">%1$s
+скопировано в буфер обмена</string>
 </resources>

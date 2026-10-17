@@ -416,4 +416,6 @@
     <string name="firefly_kind_tags">tags</string>
     <string name="firefly_kind_accounts">accounts</string>
     <string name="firefly_kind_currencies">currencies</string>
+    <string name="about_link_copied">%1$s
+copied to clipboard</string>
 </resources>
