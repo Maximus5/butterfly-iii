@@ -14,8 +14,8 @@ android {
         applicationId = "io.github.maximus5.butterflyiii"
         minSdk = 26
         targetSdk = 36
-        versionCode = 248
-        versionName = "0.248"
+        versionCode = 249
+        versionName = "0.249"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
