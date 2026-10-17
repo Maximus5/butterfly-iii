@@ -106,7 +106,7 @@ class AutoCreateWorker(context: Context, params: WorkerParameters) : CoroutineWo
         return when (val result = checkForDuplicate(applicationContext, resolved)) {
             is DuplicateCheckResult.None -> post(resolved, amount, message, prefs)
             is DuplicateCheckResult.SearchFailed -> {
-                DiagnosticLog.log(applicationContext, "auto-create: duplicate check failed (attempt ${runAttemptCount + 1}): ${result.message.take(80)}")
+                DiagnosticLog.log(applicationContext, "auto-create: duplicate check failed (attempt ${runAttemptCount + 1})")
                 // Safe to retry - nothing has been written yet, this is only a read (unlike
                 // post()'s own createTransaction call, which never retries, see this class's own
                 // KDoc). A dedup check that couldn't be verified is no longer "assume no

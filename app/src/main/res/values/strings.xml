@@ -408,7 +408,12 @@
     <string name="about_diagnostic_details_link">What is written?</string>
     <string name="about_diagnostic_details_title">Diagnostic log: what is stored</string>
     <string name="about_diagnostic_written_title">What is written</string>
-    <string name="about_diagnostic_written">• which rule matched each message\n• whether a Butterfly notification was posted, suppressed or replaced\n• problems found in a message (for example, no account selected)\n• how many duplicates and shade notifications were found\n• times of events and time offsets\n• Firefly transaction IDs\n• first 6 characters of each transaction\'s SHA-256 hash</string>
+    <string name="about_diagnostic_written">• which rule matched each message\n• whether a Butterfly notification was posted, suppressed or replaced\n• problems found in a message (for example, no account selected)\n• how many duplicates and shade notifications were found\n• times of events and time offsets\n• Firefly transaction IDs\n• errors of requests to Firefly (the request address and the HTTP status or error type only)\n• first 6 characters of each transaction\'s SHA-256 hash</string>
     <string name="about_diagnostic_never_title">Never written</string>
     <string name="about_diagnostic_never">• transaction amounts\n• descriptions and notes\n• counterparties\n• account names</string>
+    <string name="firefly_load_failed">Couldn\'t load from Firefly: %1$s (%2$s)</string>
+    <string name="firefly_kind_categories">categories</string>
+    <string name="firefly_kind_tags">tags</string>
+    <string name="firefly_kind_accounts">accounts</string>
+    <string name="firefly_kind_currencies">currencies</string>
 </resources>

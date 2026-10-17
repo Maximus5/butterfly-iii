@@ -106,6 +106,13 @@ fun parseCurrencyList(body: String): List<FireflyCurrency> = try {
 
 /** `meta.pagination.total_pages` - defaults to 1 (i.e. "no more pages") for anything that isn't
  * shaped the way a real paginated response is, so a malformed response doesn't spin forever. */
+/** True when [body] is a Firefly list answer (a JSON object with a `data` array, possibly empty). */
+fun isListResponse(body: String): Boolean = try {
+    JSONObject(body).optJSONArray("data") != null
+} catch (e: JSONException) {
+    false
+}
+
 fun totalPages(body: String): Int = try {
     JSONObject(body).optJSONObject("meta")?.optJSONObject("pagination")?.optInt("total_pages", 1) ?: 1
 } catch (e: JSONException) {

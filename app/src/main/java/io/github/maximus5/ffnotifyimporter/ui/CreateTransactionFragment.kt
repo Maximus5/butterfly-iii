@@ -270,22 +270,22 @@ class CreateTransactionFragment : Fragment() {
         val prefs = FireflyPrefs(context)
         if (!prefs.isConfigured()) return
         loadAssetAccounts(context)
+        // Three independent requests: each field gets its list the moment it arrives, none waits for
+        // the others (a slow tags request must not hold back the categories).
         viewLifecycleOwner.lifecycleScope.launch {
-            val categoryList = (FireflySuggestions.categories(prefs) as? FireflyApiClient.Result.Success)?.value
-            val tagList = (FireflySuggestions.tags(prefs) as? FireflyApiClient.Result.Success)?.value
-            val currencyList = (FireflySuggestions.enabledCurrencies(prefs) as? FireflyApiClient.Result.Success)?.value
+            val categoryList = (FireflySuggestions.categories(prefs, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value ?: return@launch
+            binding?.categoryInput?.setAdapter(SuggestionAdapter(context, categoryList.map { it.name }))
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val tagList = (FireflySuggestions.tags(prefs, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value ?: return@launch
+            binding?.tagsInput?.setSuggestions(tagList)
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val currencyList = (FireflySuggestions.enabledCurrencies(prefs) as? FireflyApiClient.Result.Success)?.value ?: return@launch
             val binding = binding ?: return@launch
-            if (currencyList != null) {
-                val codes = currencyList.map { it.code }
-                binding.currencyCodeInput.setAdapter(SuggestionAdapter(context, codes))
-                binding.foreignCurrencyCodeInput.setAdapter(SuggestionAdapter(context, codes))
-            }
-            if (categoryList != null) {
-                binding.categoryInput.setAdapter(SuggestionAdapter(context, categoryList.map { it.name }))
-            }
-            if (tagList != null) {
-                binding.tagsInput.setSuggestions(tagList)
-            }
+            val codes = currencyList.map { it.code }
+            binding.currencyCodeInput.setAdapter(SuggestionAdapter(context, codes))
+            binding.foreignCurrencyCodeInput.setAdapter(SuggestionAdapter(context, codes))
         }
     }
 

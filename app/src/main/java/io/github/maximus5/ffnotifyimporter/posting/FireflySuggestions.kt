@@ -12,8 +12,9 @@ import io.github.maximus5.ffnotifyimporter.prefs.FireflyPrefs
  * server every time they open.
  *
  * Fresh for [TTL_MILLIS]; after that the next call refetches, and if that fails the stale list is
- * still returned (a failure only reaches the caller when there is nothing cached at all). The cache
- * belongs to one server address - a different base URL discards it. Memory only, on purpose: the
+ * still returned (a failure only reaches the caller when there is nothing cached at all). The cached
+ * list is replaced only by a request that finished successfully: a failed or half-read refresh
+ * never clears or shrinks it. The cache belongs to one server address - a different base URL discards it. Memory only, on purpose: the
  * names can be personal and the app stores nothing about the server's data on disk beyond what the
  * user opted into. [remember] adds what a just-saved transaction used, so the next suggestion list
  * already has a brand-new category or tag.
@@ -23,6 +24,13 @@ object FireflySuggestions {
     private const val TTL_MILLIS = 10 * 60 * 1000L
 
     private class Entry<T>(val baseUrl: String, val fetchedAt: Long, val values: List<T>)
+
+    /** Called once for every request that failed after all its retries (kind = what was being loaded,
+     * message = what the user may read). Set by the app to show a short notice; the diagnostic log
+     * has the details. A failure with a usable cached list still counts - the refresh did fail. */
+    @Volatile var onLoadFailed: ((kind: Kind, message: String) -> Unit)? = null
+
+    enum class Kind { CATEGORIES, TAGS, ASSET_ACCOUNTS, CURRENCIES }
 
     @Volatile private var categoryEntry: Entry<FireflyCategory>? = null
     @Volatile private var tagEntry: Entry<String>? = null
@@ -36,24 +44,27 @@ object FireflySuggestions {
      * process outlives the visible app (the notification listener keeps it alive), so the TTL
      * alone left a just-added account missing for up to 10 minutes. */
     suspend fun assetAccounts(prefs: FireflyPrefs, forceRefresh: Boolean = false): FireflyApiClient.Result<List<FireflyAccount>> =
-        load(prefs, assetAccountEntry, { it.listAssetAccounts() }, { assetAccountEntry = it }, forceRefresh)
+        load(Kind.ASSET_ACCOUNTS, prefs, assetAccountEntry, { it.listAssetAccounts() }, { assetAccountEntry = it }, forceRefresh)
 
     /** Only the currencies switched on in the user's Firefly (the API has no server-side filter). */
     suspend fun enabledCurrencies(prefs: FireflyPrefs): FireflyApiClient.Result<List<FireflyCurrency>> =
-        load(prefs, currencyEntry, { client ->
+        load(Kind.CURRENCIES, prefs, currencyEntry, { client ->
             when (val result = client.listCurrencies()) {
                 is FireflyApiClient.Result.Success -> FireflyApiClient.Result.Success(result.value.filter { it.enabled })
                 is FireflyApiClient.Result.Failure -> result
             }
         }, { currencyEntry = it })
 
-    suspend fun categories(prefs: FireflyPrefs): FireflyApiClient.Result<List<FireflyCategory>> =
-        load(prefs, categoryEntry, { it.listCategories() }, { categoryEntry = it })
+    /** [forceRefresh]: an editing screen passes true when it opens, so a category made in Firefly's own
+     * web UI is offered at once (the cache is only the fallback if the request fails). */
+    suspend fun categories(prefs: FireflyPrefs, forceRefresh: Boolean = false): FireflyApiClient.Result<List<FireflyCategory>> =
+        load(Kind.CATEGORIES, prefs, categoryEntry, { it.listCategories() }, { categoryEntry = it }, forceRefresh)
 
-    suspend fun tags(prefs: FireflyPrefs): FireflyApiClient.Result<List<String>> =
-        load(prefs, tagEntry, { it.listTags() }, { tagEntry = it })
+    suspend fun tags(prefs: FireflyPrefs, forceRefresh: Boolean = false): FireflyApiClient.Result<List<String>> =
+        load(Kind.TAGS, prefs, tagEntry, { it.listTags() }, { tagEntry = it }, forceRefresh)
 
     private suspend fun <T> load(
+        kind: Kind,
         prefs: FireflyPrefs,
         current: Entry<T>?,
         fetch: suspend (FireflyApiClient) -> FireflyApiClient.Result<List<T>>,
@@ -70,8 +81,10 @@ object FireflySuggestions {
                 store(Entry(baseUrl, System.currentTimeMillis(), result.value))
                 result
             }
-            is FireflyApiClient.Result.Failure ->
+            is FireflyApiClient.Result.Failure -> {
+                onLoadFailed?.invoke(kind, result.message)
                 if (cached != null) FireflyApiClient.Result.Success(cached.values) else result
+            }
         }
     }
 

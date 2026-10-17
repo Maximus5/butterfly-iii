@@ -122,17 +122,21 @@ class RuleEditFragment : Fragment() {
     private fun loadSuggestions() {
         val prefs = FireflyPrefs(requireContext())
         if (!prefs.isConfigured()) return
+        // Independent requests: each field gets its list as soon as it arrives.
         viewLifecycleOwner.lifecycleScope.launch {
             (FireflySuggestions.assetAccounts(prefs, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value?.let {
                 assetAccounts = it
                 applyAccountSuggestions()
                 updateAssetAccountHints()
             }
-            val categories = (FireflySuggestions.categories(prefs) as? FireflyApiClient.Result.Success)?.value
-            val tags = (FireflySuggestions.tags(prefs) as? FireflyApiClient.Result.Success)?.value
-            val binding = binding ?: return@launch
-            if (categories != null) binding.categoryTemplateInput.setAdapter(SuggestionAdapter(requireContext(), categories.map { it.name }))
-            if (tags != null) binding.tagsTemplateInput.setSuggestions(tags)
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val categories = (FireflySuggestions.categories(prefs, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value ?: return@launch
+            binding?.categoryTemplateInput?.setAdapter(SuggestionAdapter(requireContext(), categories.map { it.name }))
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val tags = (FireflySuggestions.tags(prefs, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value ?: return@launch
+            binding?.tagsTemplateInput?.setSuggestions(tags)
         }
     }
 

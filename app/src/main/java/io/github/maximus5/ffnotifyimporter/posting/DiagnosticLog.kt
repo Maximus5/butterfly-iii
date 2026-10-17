@@ -15,7 +15,8 @@ import java.util.Locale
  * **Off by default** (About -> "Write diagnostic log"): nothing is written until the user turns it
  * on, and turning it off deletes what was written. While on it holds no amounts, descriptions,
  * counterparties or account names - only the user's own rule labels, flags, counts, time offsets,
- * Firefly transaction numbers, the times of the events themselves and the first characters of the
+ * Firefly transaction numbers, how each Firefly API call ended (endpoint without its query, HTTP status
+ * or exception class - never a request or response body, header, token or exception message), the times of the events themselves and the first characters of the
  * dedup hashes (enough to tell "same" from "different"; the hash of amount + currency could in
  * principle be brute-forced back to the amount, which is why the log is opt-in and stays on the device
  * until the user copies it). Capped at

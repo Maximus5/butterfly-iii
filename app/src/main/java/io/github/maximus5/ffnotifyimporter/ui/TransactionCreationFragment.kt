@@ -111,21 +111,20 @@ class TransactionCreationFragment : Fragment() {
      * shared [FireflySuggestions] cache); without a server they stay plain text fields. */
     private fun loadSuggestions() {
         if (!prefs.isConfigured()) return
+        // Independent requests: each field gets its list as soon as it arrives.
         viewLifecycleOwner.lifecycleScope.launch {
-            val tags = (FireflySuggestions.tags(prefs) as? FireflyApiClient.Result.Success)?.value
-            val accounts = (FireflySuggestions.assetAccounts(prefs, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value
-            val currencies = (FireflySuggestions.enabledCurrencies(prefs) as? FireflyApiClient.Result.Success)?.value
+            val tags = (FireflySuggestions.tags(prefs, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value ?: return@launch
             val binding = binding ?: return@launch
-            if (tags != null) {
-                binding.allTransactionsTagInput.setSuggestions(tags)
-                binding.approxTagInput.setSuggestions(tags)
-            }
-            if (accounts != null) {
-                binding.defaultSourceAccountInput.setAdapter(SuggestionAdapter(requireContext(), accounts.map { it.name }))
-            }
-            if (currencies != null) {
-                binding.defaultAccountCurrencyInput.setAdapter(SuggestionAdapter(requireContext(), currencies.map { it.code }))
-            }
+            binding.allTransactionsTagInput.setSuggestions(tags)
+            binding.approxTagInput.setSuggestions(tags)
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val accounts = (FireflySuggestions.assetAccounts(prefs, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value ?: return@launch
+            binding?.defaultSourceAccountInput?.setAdapter(SuggestionAdapter(requireContext(), accounts.map { it.name }))
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val currencies = (FireflySuggestions.enabledCurrencies(prefs) as? FireflyApiClient.Result.Success)?.value ?: return@launch
+            binding?.defaultAccountCurrencyInput?.setAdapter(SuggestionAdapter(requireContext(), currencies.map { it.code }))
         }
     }
 

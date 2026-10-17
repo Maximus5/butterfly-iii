@@ -408,7 +408,12 @@
     <string name="about_diagnostic_details_link">Was wird geschrieben?</string>
     <string name="about_diagnostic_details_title">Diagnoseprotokoll: was gespeichert wird</string>
     <string name="about_diagnostic_written_title">Was geschrieben wird</string>
-    <string name="about_diagnostic_written">• welche Regel auf jede Nachricht gepasst hat\n• ob eine Butterfly-Benachrichtigung gesendet, unterdrückt oder ersetzt wurde\n• Probleme in einer Nachricht (zum Beispiel: kein Konto gewählt)\n• wie viele Duplikate und Benachrichtigungen im Benachrichtigungsfeld gefunden wurden\n• Zeiten von Ereignissen und Zeitabstände\n• Firefly-Buchungs-IDs\n• die ersten 6 Zeichen des SHA-256-Hashs jeder Buchung</string>
+    <string name="about_diagnostic_written">• welche Regel auf jede Nachricht gepasst hat\n• ob eine Butterfly-Benachrichtigung gesendet, unterdrückt oder ersetzt wurde\n• Probleme in einer Nachricht (zum Beispiel: kein Konto gewählt)\n• wie viele Duplikate und Benachrichtigungen im Benachrichtigungsfeld gefunden wurden\n• Zeiten von Ereignissen und Zeitabstände\n• Firefly-Buchungs-IDs\n• Fehler bei Anfragen an Firefly (nur die Anfrageadresse und der HTTP-Status oder Fehlertyp)\n• die ersten 6 Zeichen des SHA-256-Hashs jeder Buchung</string>
     <string name="about_diagnostic_never_title">Nie geschrieben wird</string>
     <string name="about_diagnostic_never">• Buchungsbeträge\n• Beschreibungen und Notizen\n• Empfänger\n• Kontonamen</string>
+    <string name="firefly_load_failed">Laden aus Firefly fehlgeschlagen: %1$s (%2$s)</string>
+    <string name="firefly_kind_categories">Kategorien</string>
+    <string name="firefly_kind_tags">Tags</string>
+    <string name="firefly_kind_accounts">Konten</string>
+    <string name="firefly_kind_currencies">Währungen</string>
 </resources>

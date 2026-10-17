@@ -3,6 +3,7 @@ package io.github.maximus5.ffnotifyimporter.prefs
 import android.content.Context
 import io.github.maximus5.ffnotifyimporter.network.FireflyApiClient
 import io.github.maximus5.ffnotifyimporter.network.isCleartextUrl
+import io.github.maximus5.ffnotifyimporter.posting.DiagnosticLog
 
 /**
  * The Firefly III connection: base URL, personal access token and the plain-`http://` opt-in. The
@@ -21,6 +22,8 @@ import io.github.maximus5.ffnotifyimporter.network.isCleartextUrl
  * `BackupManager` reads, hence the tests.)
  */
 class SecureSettings(context: Context) {
+
+    private val appContext = context.applicationContext
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
@@ -41,7 +44,7 @@ class SecureSettings(context: Context) {
 
     /** The one way to build an API client from saved settings, so no call site can forget the
      * cleartext opt-in. */
-    fun apiClient(): FireflyApiClient = FireflyApiClient(getBaseUrl(), getToken(), isAllowCleartext())
+    fun apiClient(): FireflyApiClient = FireflyApiClient(getBaseUrl(), getToken(), isAllowCleartext()) { DiagnosticLog.log(appContext, it) }
 
     init {
         migrateAllowCleartext()

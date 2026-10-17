@@ -14,11 +14,18 @@ import java.io.IOException
  * into a genuine duplicate). Only used for read-only/idempotent calls: a repeated GET is always
  * safe to retry.
  *
+ * [onFailedAttempt] sees every failed attempt (the diagnostic log records them all, so a retry that
+ * finally succeeds does not hide the failure before it).
+ *
  * The last attempt's [IOException] propagates uncaught if every attempt fails - callers already
  * catch [IOException] around their own call site and turn it into a `Result.Failure`, same as
  * before this existed.
  */
-internal suspend inline fun <T> withNetworkRetry(maxAttempts: Int = 3, block: () -> T): T {
+internal suspend inline fun <T> withNetworkRetry(
+    maxAttempts: Int = 3,
+    onFailedAttempt: (attempt: Int, error: IOException) -> Unit = { _, _ -> },
+    block: () -> T,
+): T {
     var attempt = 1
     while (true) {
         try {
@@ -26,6 +33,7 @@ internal suspend inline fun <T> withNetworkRetry(maxAttempts: Int = 3, block: ()
         } catch (e: CleartextBlockedException) {
             throw e
         } catch (e: IOException) {
+            onFailedAttempt(attempt, e)
             if (attempt >= maxAttempts) throw e
             delay(RETRY_BASE_DELAY_MILLIS shl (attempt - 1))
             attempt++

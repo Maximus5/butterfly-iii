@@ -410,7 +410,12 @@
     <string name="about_diagnostic_details_link">Что записывается?</string>
     <string name="about_diagnostic_details_title">Диагностический журнал: что хранится</string>
     <string name="about_diagnostic_written_title">Что записывается</string>
-    <string name="about_diagnostic_written">• какое правило сработало на каждое сообщение\n• была ли показана, подавлена или заменена нотификация Butterfly в шторке\n• проблемы, найденные в сообщении (например, не выбран счёт)\n• сколько найдено дубликатов и нотификаций в шторке\n• время событий и временные интервалы\n• ID транзакций Firefly\n• первые 6 символов SHA-256 хеша транзакции</string>
+    <string name="about_diagnostic_written">• какое правило сработало на каждое сообщение\n• была ли показана, подавлена или заменена нотификация Butterfly в шторке\n• проблемы, найденные в сообщении (например, не выбран счёт)\n• сколько найдено дубликатов и нотификаций в шторке\n• время событий и временные интервалы\n• ID транзакций Firefly\n• ошибки запросов к Firefly (только адрес запроса и HTTP-статус или тип ошибки)\n• первые 6 символов SHA-256 хеша транзакции</string>
     <string name="about_diagnostic_never_title">Никогда не записывается</string>
     <string name="about_diagnostic_never">• суммы транзакций\n• описания и заметки\n• контрагенты\n• названия счетов</string>
+    <string name="firefly_load_failed">Не удалось загрузить из Firefly: %1$s (%2$s)</string>
+    <string name="firefly_kind_categories">категории</string>
+    <string name="firefly_kind_tags">теги</string>
+    <string name="firefly_kind_accounts">счета</string>
+    <string name="firefly_kind_currencies">валюты</string>
 </resources>

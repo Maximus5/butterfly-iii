@@ -6,14 +6,17 @@ import io.github.maximus5.ffnotifyimporter.data.MessageHistoryDb
 import io.github.maximus5.ffnotifyimporter.data.MessageStore
 import io.github.maximus5.ffnotifyimporter.data.RetentionController
 import io.github.maximus5.ffnotifyimporter.posting.AutoCreateScheduler
+import io.github.maximus5.ffnotifyimporter.posting.FireflySuggestions
 import io.github.maximus5.ffnotifyimporter.prefs.RetentionPrefs
 import io.github.maximus5.ffnotifyimporter.rules.CreatedTransactionsDb
+import io.github.maximus5.ffnotifyimporter.ui.FireflyLoadFailureNotice
 
 class FfNotifyImporterApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
         AppVisibility.register(this)
+        FireflySuggestions.onLoadFailed = FireflyLoadFailureNotice(this)::report
         RetentionController.applyOnStartup(
             settings = RetentionPrefs(this).get(),
             store = MessageStore.shared,

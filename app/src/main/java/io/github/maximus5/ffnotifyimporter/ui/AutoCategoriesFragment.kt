@@ -110,7 +110,7 @@ class AutoCategoriesFragment : Fragment() {
         val firefly = FireflyPrefs(requireContext())
         if (!firefly.isConfigured()) return
         viewLifecycleOwner.lifecycleScope.launch {
-            categoryNames = (FireflySuggestions.categories(firefly) as? FireflyApiClient.Result.Success)?.value?.map { it.name }
+            categoryNames = (FireflySuggestions.categories(firefly, forceRefresh = true) as? FireflyApiClient.Result.Success)?.value?.map { it.name }
         }
     }
 

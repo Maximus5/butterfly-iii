@@ -3705,6 +3705,23 @@ offsets and the first 6 characters of dedup hashes (enough to compare two; a has
 currency could in principle be brute-forced back to the amount, which is why it is opt-in and the log
 leaves the device only when the user copies it). Logging never throws.
 
+## Firefly lists, API errors and the diagnostic log
+
+- `FireflyApiClient` takes an optional `log` callback (`SecureSettings.apiClient()` wires it to
+  `DiagnosticLog`). It records, per call, only how the call ended: `api GET /api/v1/categories: ok,
+  2 page(s), 87 items`, `HTTP 503`, `redirect 301`, `unreadable response (page 2)`, and **every failed
+  attempt of a retried read** (`attempt 1 failed: SocketTimeoutException`), so a retry that finally
+  succeeds does not hide the failure before it. Never a request or response body (bank data), a header,
+  the token, the query string (a search carries descriptions and amounts) or an exception's own message
+  (it can carry the server address); `FireflyApiClientLogTest` checks this against a local socket server.
+- A 2xx answer that is not a Firefly list (`isListResponse`: JSON with a `data` array) is a failure, not
+  an empty page - a half-read list used to be cached as complete for 10 minutes.
+- `FireflySuggestions` replaces a cached list only after a request finished successfully; the screens
+  that offer a list pass `forceRefresh = true` when they open, and each field gets its list the moment
+  it arrives (independent coroutines, no waiting for the other lists). A request that fails after all
+  its retries calls `onLoadFailed`; `ui.FireflyLoadFailureNotice` turns the failures of one screen
+  opening into one toast naming the lists, with the status line only.
+
 ## Auto categories
 
 A counterparty -> category list that fills in a category the rule did not give, so a shop the user

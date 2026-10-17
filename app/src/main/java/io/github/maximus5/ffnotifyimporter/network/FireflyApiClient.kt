@@ -13,7 +13,12 @@ import java.net.URLEncoder
  * the framework already covers it" reasoning already used for the planned rules export/import
  * JSON format (see TODO.md) - a handful of endpoints doesn't justify a full HTTP client library.
  */
-class FireflyApiClient(baseUrl: String, private val token: String, private val allowCleartext: Boolean = false) {
+class FireflyApiClient(
+    baseUrl: String,
+    private val token: String,
+    private val allowCleartext: Boolean = false,
+    private val log: ((String) -> Unit)? = null,
+) {
 
     private val baseUrl = normalizeBaseUrl(baseUrl)
 
@@ -29,18 +34,18 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
      */
     suspend fun testConnection(): Result<String> = withContext(Dispatchers.IO) {
         try {
-            withNetworkRetry {
+            retrying("GET", "/api/v1/about") {
                 val connection = openConnection("/api/v1/about", "GET")
                 val code = connection.responseCode
                 if (code in 200..299) {
                     val body = connection.inputStream.bufferedReader().use { it.readText() }
                     Result.Success(parseAboutVersion(body).orEmpty())
                 } else {
-                    Result.Failure(errorMessage(connection, code))
+                    Result.Failure(errorMessage(connection, code, "GET", "/api/v1/about"))
                 }
             }
         } catch (e: IOException) {
-            Result.Failure(e.message ?: e.javaClass.simpleName)
+            ioFailure(e, "GET", "/api/v1/about")
         }
     }
 
@@ -57,19 +62,21 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
             var page = 1
             var totalPagesSeen: Int
             do {
-                val body = withNetworkRetry {
+                val body = retrying("GET", "/api/v1/accounts") {
                     val connection = openConnection("/api/v1/accounts?type=asset&page=$page", "GET")
                     val code = connection.responseCode
-                    if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code))
+                    if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code, "GET", "/api/v1/accounts"))
                     connection.inputStream.bufferedReader().use { it.readText() }
                 }
+                if (!isListResponse(body)) return@withContext unreadable("GET", "/api/v1/accounts", page)
                 accounts += parseAccountList(body)
                 totalPagesSeen = totalPages(body)
                 page++
             } while (page <= totalPagesSeen)
+            record("GET", "/api/v1/accounts", "ok, ${page - 1} page(s), ${accounts.size} items")
             Result.Success(accounts)
         } catch (e: IOException) {
-            Result.Failure(e.message ?: e.javaClass.simpleName)
+            ioFailure(e, "GET", "/api/v1/accounts")
         }
     }
 
@@ -87,19 +94,21 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
             var page = 1
             var totalPagesSeen: Int
             do {
-                val body = withNetworkRetry {
+                val body = retrying("GET", "/api/v1/categories") {
                     val connection = openConnection("/api/v1/categories?page=$page", "GET")
                     val code = connection.responseCode
-                    if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code))
+                    if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code, "GET", "/api/v1/categories"))
                     connection.inputStream.bufferedReader().use { it.readText() }
                 }
+                if (!isListResponse(body)) return@withContext unreadable("GET", "/api/v1/categories", page)
                 categories += parseCategoryList(body)
                 totalPagesSeen = totalPages(body)
                 page++
             } while (page <= totalPagesSeen)
+            record("GET", "/api/v1/categories", "ok, ${page - 1} page(s), ${categories.size} items")
             Result.Success(categories)
         } catch (e: IOException) {
-            Result.Failure(e.message ?: e.javaClass.simpleName)
+            ioFailure(e, "GET", "/api/v1/categories")
         }
     }
 
@@ -111,19 +120,21 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
             var page = 1
             var totalPagesSeen: Int
             do {
-                val body = withNetworkRetry {
+                val body = retrying("GET", "/api/v1/tags") {
                     val connection = openConnection("/api/v1/tags?page=$page", "GET")
                     val code = connection.responseCode
-                    if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code))
+                    if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code, "GET", "/api/v1/tags"))
                     connection.inputStream.bufferedReader().use { it.readText() }
                 }
+                if (!isListResponse(body)) return@withContext unreadable("GET", "/api/v1/tags", page)
                 tags += parseTagList(body)
                 totalPagesSeen = totalPages(body)
                 page++
             } while (page <= totalPagesSeen)
+            record("GET", "/api/v1/tags", "ok, ${page - 1} page(s), ${tags.size} items")
             Result.Success(tags)
         } catch (e: IOException) {
-            Result.Failure(e.message ?: e.javaClass.simpleName)
+            ioFailure(e, "GET", "/api/v1/tags")
         }
     }
 
@@ -141,19 +152,21 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
             var page = 1
             var totalPagesSeen: Int
             do {
-                val body = withNetworkRetry {
+                val body = retrying("GET", "/api/v1/currencies") {
                     val connection = openConnection("/api/v1/currencies?page=$page", "GET")
                     val code = connection.responseCode
-                    if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code))
+                    if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code, "GET", "/api/v1/currencies"))
                     connection.inputStream.bufferedReader().use { it.readText() }
                 }
+                if (!isListResponse(body)) return@withContext unreadable("GET", "/api/v1/currencies", page)
                 currencies += parseCurrencyList(body)
                 totalPagesSeen = totalPages(body)
                 page++
             } while (page <= totalPagesSeen)
+            record("GET", "/api/v1/currencies", "ok, ${page - 1} page(s), ${currencies.size} items")
             Result.Success(currencies)
         } catch (e: IOException) {
-            Result.Failure(e.message ?: e.javaClass.simpleName)
+            ioFailure(e, "GET", "/api/v1/currencies")
         }
     }
 
@@ -179,12 +192,12 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
             if (code in 200..299) {
                 val body = connection.inputStream.bufferedReader().use { it.readText() }
                 val id = parseCreatedTransactionId(body)
-                if (id != null) Result.Success(id) else Result.Failure("No transaction id in response: $body")
+                if (id != null) Result.Success(id) else noTransactionId(body, "POST", "/api/v1/transactions")
             } else {
-                Result.Failure(errorMessage(connection, code))
+                Result.Failure(errorMessage(connection, code, "POST", "/api/v1/transactions"))
             }
         } catch (e: IOException) {
-            Result.Failure(e.message ?: e.javaClass.simpleName)
+            ioFailure(e, "POST", "/api/v1/transactions")
         }
     }
 
@@ -206,10 +219,10 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
                 var page = 1
                 var totalPagesSeen: Int
                 do {
-                    val body = withNetworkRetry {
+                    val body = retrying("GET", "/api/v1/search/transactions") {
                         val connection = openConnection("/api/v1/search/transactions?query=$encodedQuery&page=$page", "GET")
                         val code = connection.responseCode
-                        if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code))
+                        if (code !in 200..299) return@withContext Result.Failure(errorMessage(connection, code, "GET", "/api/v1/search/transactions"))
                         connection.inputStream.bufferedReader().use { it.readText() }
                     }
                     candidates += parseTransactionList(body)
@@ -218,7 +231,7 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
                 } while (page <= totalPagesSeen)
                 Result.Success(candidates)
             } catch (e: IOException) {
-                Result.Failure(e.message ?: e.javaClass.simpleName)
+                ioFailure(e, "GET", "/api/v1/search/transactions")
             }
         }
 
@@ -243,7 +256,7 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
      * SearchFailed`'s KDoc). */
     suspend fun getTransaction(id: String): Result<FireflyTransactionCandidate?> = withContext(Dispatchers.IO) {
         try {
-            withNetworkRetry {
+            retrying("GET", "/api/v1/transactions/$id") {
                 val connection = openConnection("/api/v1/transactions/$id", "GET")
                 val code = connection.responseCode
                 when {
@@ -252,11 +265,11 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
                         Result.Success(parseSingleTransaction(body))
                     }
                     code == 404 -> Result.Success(null)
-                    else -> Result.Failure(errorMessage(connection, code))
+                    else -> Result.Failure(errorMessage(connection, code, "GET", "/api/v1/transactions/$id"))
                 }
             }
         } catch (e: IOException) {
-            Result.Failure(e.message ?: e.javaClass.simpleName)
+            ioFailure(e, "GET", "/api/v1/transactions/$id")
         }
     }
 
@@ -281,12 +294,12 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
             if (code in 200..299) {
                 val body = connection.inputStream.bufferedReader().use { it.readText() }
                 val resultId = parseCreatedTransactionId(body)
-                if (resultId != null) Result.Success(resultId) else Result.Failure("No transaction id in response: $body")
+                if (resultId != null) Result.Success(resultId) else noTransactionId(body, "PUT", "/api/v1/transactions/$id")
             } else {
-                Result.Failure(errorMessage(connection, code))
+                Result.Failure(errorMessage(connection, code, "PUT", "/api/v1/transactions/$id"))
             }
         } catch (e: IOException) {
-            Result.Failure(e.message ?: e.javaClass.simpleName)
+            ioFailure(e, "PUT", "/api/v1/transactions/$id")
         }
     }
 
@@ -302,7 +315,36 @@ class FireflyApiClient(baseUrl: String, private val token: String, private val a
         return connection
     }
 
-    private fun errorMessage(connection: HttpURLConnection, code: Int): String {
+    /** One line for the diagnostic log ([log]): which call, and only how it ended. Never the request or
+     * response body (bank data), never a header or the token, never the query string (a search carries
+     * descriptions and amounts), never an exception's own message (it can carry the server address). */
+    private fun record(method: String, path: String, detail: String) {
+        log?.invoke("api $method ${path.substringBefore('?')}: $detail")
+    }
+
+    /** [withNetworkRetry] that logs every failed attempt. */
+    private suspend inline fun <T> retrying(method: String, path: String, block: () -> T): T =
+        withNetworkRetry(onFailedAttempt = { attempt, e -> record(method, path, "attempt $attempt failed: ${e.javaClass.simpleName}") }, block = block)
+
+    private fun ioFailure(e: IOException, method: String, path: String): Result.Failure {
+        record(method, path, "failed: ${e.javaClass.simpleName}")
+        return Result.Failure(e.message ?: e.javaClass.simpleName)
+    }
+
+    private fun noTransactionId(body: String, method: String, path: String): Result.Failure {
+        record(method, path, "no transaction id in the response")
+        return Result.Failure("No transaction id in response: $body")
+    }
+
+    /** A 2xx answer that is not a Firefly list (a proxy's HTML page, a cut-off body): an error, not
+     * an empty page - otherwise a half-loaded list would be cached as if it were complete. */
+    private fun unreadable(method: String, path: String, page: Int): Result.Failure {
+        record(method, path, "unreadable response (page $page)")
+        return Result.Failure("Unexpected response from the server (page $page)")
+    }
+
+    private fun errorMessage(connection: HttpURLConnection, code: Int, method: String, path: String): String {
+        record(method, path, if (code in 300..399) "redirect $code" else "HTTP $code")
         if (code in 300..399) return redirectMessage(code, connection.getHeaderField("Location"))
         val errorBody = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
         return "$code ${connection.responseMessage.orEmpty()}".trim() +
