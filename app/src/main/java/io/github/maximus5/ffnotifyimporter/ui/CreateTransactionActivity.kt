@@ -28,8 +28,8 @@ import io.github.maximus5.ffnotifyimporter.databinding.ActivityCreateTransaction
  *   the user's own call: if the linked transaction is wrong, fix it here instead of creating a
  *   second one and leaving the original behind.
  *
- * The no-match case still shows the plain read-only dialog - there's nothing to review/edit
- * there, nothing created or found to edit either.
+ * The no-match case shows a dialog with a "Create manually" button (`manualIntent`): the same
+ * Create mode, but starting from an empty draft instead of a rule match.
  */
 class CreateTransactionActivity : AppCompatActivity() {
 
@@ -67,6 +67,7 @@ class CreateTransactionActivity : AppCompatActivity() {
         private const val EXTRA_TIMESTAMP_MILLIS = "timestamp_millis"
         private const val EXTRA_STALE_LINKED_ID = "stale_linked_id"
         private const val EXTRA_EDIT_TRANSACTION_ID = "edit_transaction_id"
+        private const val EXTRA_MANUAL = "manual"
 
         /** [message] is passed as its own plain fields, not a `Parcelable`/serialized
          * `CapturedMessage` - [CreateTransactionFragment] re-parses it fresh via `RuleEngine.match`
@@ -103,6 +104,13 @@ class CreateTransactionActivity : AppCompatActivity() {
                 .putExtra(EXTRA_TEXT, message.text)
                 .putExtra(EXTRA_TIMESTAMP_MILLIS, message.timestampMillis)
                 .putExtra(EXTRA_EDIT_TRANSACTION_ID, transactionId)
+
+        /** Create mode for a message no rule matched: the screen starts from `rules.manualDraft`
+         * instead of matching the message again. */
+        fun manualIntent(context: Context, message: CapturedMessage): Intent =
+            intent(context, message).putExtra(EXTRA_MANUAL, true)
+
+        fun isManual(intent: Intent): Boolean = intent.getBooleanExtra(EXTRA_MANUAL, false)
 
         fun messageFrom(intent: Intent): CapturedMessage =
             CapturedMessage(

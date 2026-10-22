@@ -3652,8 +3652,30 @@ JSON `accountApproximate`, default off; built-in rules never set it) makes `Rule
 
 A new `ParseRule` field has to be wired in four places, or it silently resets on save/restore (found
 the hard way with `accountApproximate`, which first shipped without the first two): `RulesDb`
-(column + additive migration, now v8), `backup.FullBackupJson` (its own rule (de)serialization),
+(column + additive migration, now v9), `backup.FullBackupJson` (its own rule (de)serialization),
 `backup.RulesJson`, and `ui.RuleEditFragment`.
+
+## Notifications without an amount
+
+Real case: an employer's "Payment received" push has no amount, so no rule could match it (a rule
+needs a parsable `amount`), a tap on the message did nothing, and the transaction had to be made
+in Firefly's web UI. Two ways in, both ending on the normal review screen with the amount empty:
+
+- **Per-rule switch `ParseRule.amountManual`** (rules editor "Amount is entered by hand", rules JSON
+  `amountManual`, `RulesDb` v9 column `amount_manual`; wired in the four places listed above).
+  `validateRule` then does not require the `amount` group, and `RuleEngine.buildDraft` returns a draft
+  with `amount = null` and `DraftIssue.AMOUNT_ENTRY_REQUIRED` instead of rejecting the rule. An amount
+  the pattern does capture is still used. The foreign-currency branch is skipped without an amount.
+  Distinct from `LOCAL_AMOUNT_MISSING` on purpose: that one triggers an exchange-rate lookup from the
+  foreign amount, which does not exist here. `AutoCreateWorker` and `ReviewNotificationWorker`
+  already return early for a draft without an amount, so such a message is never created by itself
+  and posts no review notification: it waits in the Messages list. The create screen focuses the
+  amount field; its existing amount validation (and the duplicate check at Create time) apply.
+- **"Create manually"** in the "No match" dialog (only when Firefly is configured; the real action on
+  the left, OK last). `CreateTransactionActivity.manualIntent` sets an extra and
+  `CreateTransactionFragment.loadForCreate` then builds the draft with `rules.manualDraft` (pure:
+  withdrawal, no amount, title as description, text as notes, the default currency, default
+  account and all-transactions tags) instead of matching again. No rule label is shown or stored.
 
 ## The applied rule is remembered on the message
 

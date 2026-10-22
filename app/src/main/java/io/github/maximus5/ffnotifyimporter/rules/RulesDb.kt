@@ -35,7 +35,8 @@ class RulesDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
                 $COL_ENABLED INTEGER NOT NULL,
                 $COL_SORT_ORDER INTEGER NOT NULL,
                 $COL_DATE_FORMAT TEXT NOT NULL DEFAULT '',
-                $COL_ACCOUNT_APPROXIMATE INTEGER NOT NULL DEFAULT 0
+                $COL_ACCOUNT_APPROXIMATE INTEGER NOT NULL DEFAULT 0,
+                $COL_AMOUNT_MANUAL INTEGER NOT NULL DEFAULT 0
             )
             """.trimIndent(),
         )
@@ -61,6 +62,9 @@ class RulesDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
         }
         if (oldVersion < 8) {
             db.execSQL("ALTER TABLE $TABLE ADD COLUMN $COL_ACCOUNT_APPROXIMATE INTEGER NOT NULL DEFAULT 0")
+        }
+        if (oldVersion < 9) {
+            db.execSQL("ALTER TABLE $TABLE ADD COLUMN $COL_AMOUNT_MANUAL INTEGER NOT NULL DEFAULT 0")
         }
     }
 
@@ -189,6 +193,7 @@ class RulesDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
         put(COL_SORT_ORDER, sortOrder)
         put(COL_DATE_FORMAT, dateFormat)
         put(COL_ACCOUNT_APPROXIMATE, if (accountApproximate) 1 else 0)
+        put(COL_AMOUNT_MANUAL, if (amountManual) 1 else 0)
     }
 
     private fun Cursor.toRule(): ParseRule {
@@ -209,6 +214,7 @@ class RulesDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
             enabled = getInt(getColumnIndexOrThrow(COL_ENABLED)) != 0,
             dateFormat = str(COL_DATE_FORMAT),
             accountApproximate = getInt(getColumnIndexOrThrow(COL_ACCOUNT_APPROXIMATE)) != 0,
+            amountManual = getInt(getColumnIndexOrThrow(COL_AMOUNT_MANUAL)) != 0,
         )
     }
 
@@ -225,7 +231,9 @@ class RulesDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
         // same as every rule saved before this existed) - see ParseRule.dateFormat's KDoc
         // v8: added account_approximate (INTEGER NOT NULL, default 0 = a normal rule) - see
         // ParseRule.accountApproximate
-        private const val DB_VERSION = 8
+        // v9: added amount_manual (INTEGER NOT NULL, default 0 = the pattern must yield an amount) -
+        // see ParseRule.amountManual
+        private const val DB_VERSION = 9
         private const val TABLE = "rules"
         private const val COL_ID = "id"
         private const val COL_LABEL = "label"
@@ -245,6 +253,7 @@ class RulesDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
         private const val COL_SORT_ORDER = "sort_order"
         private const val COL_DATE_FORMAT = "date_format"
         private const val COL_ACCOUNT_APPROXIMATE = "account_approximate"
+        private const val COL_AMOUNT_MANUAL = "amount_manual"
 
         @Volatile
         private var instance: RulesDb? = null

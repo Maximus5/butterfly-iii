@@ -34,6 +34,11 @@ enum class DraftIssue {
      * never accounts or description - so the same payment reported by a source that *does* know
      * the account (a wallet app) is recognised as the same one. */
     ACCOUNT_APPROXIMATE,
+
+    /** No amount to post yet: the rule is marked [ParseRule.amountManual] and the notification gave
+     * none (or the draft was made by hand for a message no rule matched). The user types it on the
+     * review screen; automatic creation and review notifications skip such a draft. */
+    AMOUNT_ENTRY_REQUIRED,
 }
 
 /** What a [ParseRule] detected in a notification - "what we matched", now postable via

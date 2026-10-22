@@ -108,6 +108,16 @@ class RulesJsonTest {
     }
 
     @Test
+    fun `amountManual round-trips and defaults to false when absent`() {
+        val rule = ParseRule(id = "", label = "A", kind = RuleKind.DEPOSIT, homeCurrency = "EUR", pattern = "a", amountManual = true)
+        val roundTripped = rulesFromJson(rulesToJson(listOf(rule, rule.copy(amountManual = false))))!!
+
+        assertTrue(roundTripped[0].amountManual)
+        assertFalse(roundTripped[1].amountManual)
+        assertFalse(rulesFromJson("""{"rules": [{"kind": "WITHDRAWAL", "pattern": "a"}]}""")!!.single().amountManual)
+    }
+
+    @Test
     fun `accountApproximate round-trips and defaults to false when absent`() {
         val rule = ParseRule(id = "", label = "A", kind = RuleKind.WITHDRAWAL, homeCurrency = "EUR", pattern = "a", accountApproximate = true)
         val roundTripped = rulesFromJson(rulesToJson(listOf(rule, rule.copy(accountApproximate = false))))!!

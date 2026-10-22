@@ -27,6 +27,7 @@ class RuleEngineTest {
         enabled: Boolean = true,
         dateFormat: String = "",
         accountApproximate: Boolean = false,
+        amountManual: Boolean = false,
     ) = ParseRule(
         id = id,
         label = label,
@@ -43,6 +44,7 @@ class RuleEngineTest {
         enabled = enabled,
         dateFormat = dateFormat,
         accountApproximate = accountApproximate,
+        amountManual = amountManual,
     )
 
     private fun message(
@@ -431,6 +433,38 @@ class RuleEngineTest {
         assertFalse(DraftIssue.ACCOUNT_APPROXIMATE in plain.draft.issues)
         assertTrue(DraftIssue.ACCOUNT_APPROXIMATE in approximate.draft.issues)
         assertEquals("Bank Account A", approximate.draft.sourceName)
+    }
+
+    @Test
+    fun `a rule marked amount manual matches a notification without an amount and leaves the amount empty`() {
+        val salary = message(title = "SpenditCard: Payment received", text = "Your employer has sent you a payment to your SpenditCard.")
+        val rule = rule(pattern = """Payment received.*employer""", amountManual = true)
+
+        val outcome = RuleEngine(listOf(rule)).match(salary) as ParseOutcome.Matched
+
+        assertNull(outcome.draft.amount)
+        assertTrue(DraftIssue.AMOUNT_ENTRY_REQUIRED in outcome.draft.issues)
+        assertEquals("Bank Account A", outcome.draft.sourceName)
+        assertEquals("EUR", outcome.draft.currencyCode)
+    }
+
+    @Test
+    fun `without the amount manual flag a notification with no amount still does not match`() {
+        val salary = message(title = "SpenditCard: Payment received", text = "Your employer has sent you a payment to your SpenditCard.")
+
+        val outcome = RuleEngine(listOf(rule(pattern = """Payment received.*employer"""))).match(salary)
+
+        assertEquals(ParseOutcome.NoMatch(NoMatchReason.AMOUNT_UNPARSABLE), outcome)
+    }
+
+    @Test
+    fun `a rule marked amount manual still uses an amount the pattern does capture`() {
+        val rule = rule(pattern = """(?<amount>\d+,\d+) EUR""", amountManual = true)
+
+        val outcome = RuleEngine(listOf(rule)).match(message()) as ParseOutcome.Matched
+
+        assertEquals(BigDecimal("12.50"), outcome.draft.amount)
+        assertFalse(DraftIssue.AMOUNT_ENTRY_REQUIRED in outcome.draft.issues)
     }
 
     @Test

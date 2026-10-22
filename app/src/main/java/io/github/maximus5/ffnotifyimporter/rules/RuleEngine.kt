@@ -17,7 +17,8 @@ private val whitespaceRun = Regex("\\s+")
 
 /**
  * Matches a [CapturedMessage] against an ordered list of rules. List order IS priority: the
- * first rule whose pattern matches AND yields a parsable amount wins, nothing further is tried.
+ * first rule whose pattern matches AND yields a parsable amount wins, nothing further is tried
+ * (a rule marked [ParseRule.amountManual] wins without one).
  * (No "Ambiguous" outcome - by design, see TODO.md/ARCHITECTURE.md history.)
  *
  * [currencySymbols] (symbol -> code, from [CurrenciesDb.symbolToCodeMap]) normalizes a captured
@@ -87,7 +88,8 @@ class RuleEngine(
         groups: Map<String, String>,
         message: CapturedMessage,
     ): TransactionDraft? {
-        val amount = groups[Groups.AMOUNT]?.let { parseAmount(it) } ?: return null
+        val amount = groups[Groups.AMOUNT]?.let { parseAmount(it) }
+        if (amount == null && !rule.amountManual) return null
         val currency = groups[Groups.CURRENCY]?.let { normalizeCurrency(it, currencySymbols) }
         var foreignAmount = groups[Groups.FOREIGN_AMOUNT]?.let { parseAmount(it) }
         var foreignCurrency = groups[Groups.FOREIGN_CURRENCY]?.let { normalizeCurrency(it, currencySymbols) }
@@ -97,7 +99,8 @@ class RuleEngine(
         // it is the transaction's currency, not a foreign one.
         val homeCurrency = rule.homeCurrency.ifBlank { defaultAccountCurrency }.ifBlank { currency.orEmpty() }
 
-        if (currency != null && !currency.equals(homeCurrency, ignoreCase = true) && foreignAmount == null) {
+        if (amount == null) issues += DraftIssue.AMOUNT_ENTRY_REQUIRED
+        if (amount != null && currency != null && !currency.equals(homeCurrency, ignoreCase = true) && foreignAmount == null) {
             // Only a non-home-currency amount is known: keep it as foreign, the home-currency
             // amount has to be entered manually (or fixed later from the bank statement).
             foreignAmount = amount

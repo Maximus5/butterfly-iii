@@ -425,6 +425,7 @@ class RuleEditFragment : Fragment() {
         binding.tagsTemplateInput.setText(rule?.tagsTemplate.orEmpty())
         binding.enabledSwitch.isChecked = rule?.enabled ?: true
         binding.accountApproximateSwitch.isChecked = rule?.accountApproximate ?: false
+        binding.amountManualSwitch.isChecked = rule?.amountManual ?: false
     }
 
     private fun updateAvailableMacros() {
@@ -592,6 +593,7 @@ class RuleEditFragment : Fragment() {
             enabled = binding.enabledSwitch.isChecked,
             dateFormat = binding.dateFormatInput.text?.toString().orEmpty().trim(),
             accountApproximate = binding.accountApproximateSwitch.isChecked,
+            amountManual = binding.amountManualSwitch.isChecked,
         )
     }
 

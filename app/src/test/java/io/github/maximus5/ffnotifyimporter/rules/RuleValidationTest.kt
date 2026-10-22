@@ -29,6 +29,12 @@ class RuleValidationTest {
     }
 
     @Test
+    fun `a rule marked amount manual does not need the amount group`() {
+        val rule = validRule().copy(pattern = """Payment received""", descriptionTemplate = "{title}", amountManual = true)
+        assertTrue(validateRule(rule).isEmpty())
+    }
+
+    @Test
     fun `invalid regex is reported`() {
         val errors = validateRule(validRule().copy(pattern = "("))
         assertTrue(errors.any { it.contains("regular expression", ignoreCase = true) })

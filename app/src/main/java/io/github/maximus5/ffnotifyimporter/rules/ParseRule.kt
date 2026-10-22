@@ -65,4 +65,9 @@ data class ParseRule(
      * card/account was used, so the rule names a fixed one). Such a rule never auto-creates and
      * its duplicate checks ignore accounts - see [DraftIssue.ACCOUNT_APPROXIMATE]. */
     val accountApproximate: Boolean = false,
+    /** The notification carries no amount (e.g. "Payment received" from an employer): the pattern
+     * need not define [Groups.AMOUNT], and the draft comes out with no amount and
+     * [DraftIssue.AMOUNT_ENTRY_REQUIRED] - the review screen opens with the amount empty, and
+     * nothing is created automatically. An amount the pattern does capture is still used. */
+    val amountManual: Boolean = false,
 )

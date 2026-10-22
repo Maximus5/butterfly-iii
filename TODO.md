@@ -145,3 +145,9 @@ work. Finished work is documented in ARCHITECTURE.md, not here.
   - Optionally seeding the list from Firefly's history (the most frequent category
     per counterparty) - deliberately left out for now: Firefly has no
     counterparty field, only expense accounts, which can be numerous.
+
+- Rules marked "Amount is entered by hand" (ARCHITECTURE.md, "Notifications
+  without an amount"): the message gets no review notification, it only waits in
+  the Messages list. A notification that opens the review screen with the empty
+  amount would be more visible; `ReviewNotifications.notifyMatch` needs an
+  amount today (it shows it in the text), so it needs a text variant without one.

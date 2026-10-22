@@ -367,6 +367,10 @@
     <string name="test_match_issue_account_approximate">⚠ Счёт в этом правиле — предположение: автоматическое создание пропускается, а дубли ищутся без сравнения счетов.</string>
     <string name="rule_field_account_approximate">Счёт — предположение</string>
     <string name="rule_field_account_approximate_hint">Включите, если в уведомлении не сказано, какой счёт или карта использованы, и счёт выше — лишь догадка. Тогда приложение никогда не создаёт транзакцию само: оно просит вас проверить её. Оно также узнаёт тот же платёж из другого приложения, которое знает счёт (например, из кошелька), и убирает своё напоминание. Дубли ищутся только по сумме и времени.</string>
+    <string name="rule_field_amount_manual">Сумма вводится вручную</string>
+    <string name="rule_field_amount_manual_hint">Включите для уведомления без суммы, например «Платёж получен». Тогда в шаблоне не нужна группа суммы. Приложение открывает экран проверки с пустой суммой, и вы вводите её сами. Автоматически ничего не создаётся.</string>
+    <string name="test_match_issue_amount_entry_required">⚠ В этом уведомлении нет суммы — введите её на следующем экране.</string>
+    <string name="no_match_create_manually">Создать вручную</string>
     <string name="notification_rule_line">Правило: %1$s</string>
     <string name="about_diagnostic_switch">Вести диагностический журнал</string>
     <string name="about_diagnostic_hint">По умолчанию выключено. При выключении журнал удаляется. Скопируйте его, если сообщаете о проблеме.</string>

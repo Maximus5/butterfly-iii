@@ -49,6 +49,7 @@ import io.github.maximus5.ffnotifyimporter.rules.RuleEngine
 import io.github.maximus5.ffnotifyimporter.rules.RuleKind
 import io.github.maximus5.ffnotifyimporter.rules.TransactionDraft
 import io.github.maximus5.ffnotifyimporter.rules.applyApproxConversion
+import io.github.maximus5.ffnotifyimporter.rules.manualDraft
 import io.github.maximus5.ffnotifyimporter.rules.transactionDedupHash
 import io.github.maximus5.ffnotifyimporter.rules.transactionDedupHashIgnoringAccounts
 import kotlinx.coroutines.launch
@@ -205,14 +206,26 @@ class CreateTransactionFragment : Fragment() {
      * [matchMessage] has to wait on a Firefly currency-symbol lookup (an unknown symbol only). */
     private fun loadForCreate(context: Context) {
         viewLifecycleOwner.lifecycleScope.launch {
+            if (CreateTransactionActivity.isManual(requireActivity().intent)) {
+                val prefs = FireflyPrefs(context)
+                showCreateForm(
+                    context,
+                    manualDraft(
+                        message, prefs.getDefaultAccountCurrency(), prefs.getDefaultSourceAccount(),
+                        prefs.getAllTransactionsTags(),
+                    ),
+                    ruleLabel = null,
+                )
+                return@launch
+            }
             val matched = matchMessage(context, message) as? ParseOutcome.Matched
-            showCreateForm(context, matched)
+            showCreateForm(context, matched?.draft, matched?.rule?.label)
         }
     }
 
-    private fun showCreateForm(context: Context, matched: ParseOutcome.Matched?) {
+    private fun showCreateForm(context: Context, draft: TransactionDraft?, ruleLabel: String?) {
         val binding = binding ?: return
-        if (matched == null) {
+        if (draft == null) {
             // Shouldn't happen in practice - this screen is only ever launched right after a
             // successful match - but the message could in theory have been edited away from under
             // it (it can't be, there's no edit feature for the *notification* itself) or a rule
@@ -221,16 +234,17 @@ class CreateTransactionFragment : Fragment() {
             requireActivity().finish()
             return
         }
-        val draft = matched.draft
         createdFromApproximateRule = DraftIssue.ACCOUNT_APPROXIMATE in draft.issues
 
         // Create mode only - edit mode has no "which rule matched" concept at all, the fields
         // come from Firefly's own live data instead of a fresh RuleEngine.match (see this
         // class's own KDoc). The user's own request, so it's clear at a glance which rule fired
         // before trusting (or correcting) what it filled in.
-        appliedRuleLabel = matched.rule.label.takeIf { it.isNotBlank() }
-        binding.ruleLabelText.text = boldLabel(getString(R.string.create_tx_rule_prefix), matched.rule.label)
-        binding.ruleLabelText.visibility = View.VISIBLE
+        appliedRuleLabel = ruleLabel?.takeIf { it.isNotBlank() }
+        if (ruleLabel != null) {
+            binding.ruleLabelText.text = boldLabel(getString(R.string.create_tx_rule_prefix), ruleLabel)
+            binding.ruleLabelText.visibility = View.VISIBLE
+        }
 
         kind = draft.kind
         populateFields(draft)
@@ -256,6 +270,7 @@ class CreateTransactionFragment : Fragment() {
         baseline = formSnapshot()
         loadSuggestions(context)
 
+        if (DraftIssue.AMOUNT_ENTRY_REQUIRED in draft.issues) binding.amountInput.requestFocus()
         if (DraftIssue.LOCAL_AMOUNT_MISSING in draft.issues) {
             viewLifecycleOwner.lifecycleScope.launch { resolveApproxConversion(draft) }
         }

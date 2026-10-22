@@ -104,7 +104,8 @@ How a notification becomes a transaction. See [Rules](rules.md).
 The list on the main screen holds the notifications the app has captured, newest
 first. Each message shows the number of its transaction once one is created.
 Tap a message to review and create its transaction, or to edit the one that is
-already linked. The **⋮** menu of a message can also open the transaction in
+already linked. For a message no rule matches, the dialog offers **Create
+manually**, which opens the same screen with the amount empty. The **⋮** menu of a message can also open the transaction in
 Firefly III, check whether it already exists, or forget a link.
 
 - **Save history to local storage**: when on, captured notifications survive

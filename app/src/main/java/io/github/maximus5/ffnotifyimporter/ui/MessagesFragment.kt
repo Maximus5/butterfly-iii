@@ -250,11 +250,18 @@ class MessagesFragment : Fragment() {
             try {
                 when (val outcome = matchMessage(context, message)) {
                     is ParseOutcome.NoMatch -> {
-                        AlertDialog.Builder(context)
+                        val dialog = AlertDialog.Builder(context)
                             .setTitle(R.string.test_match_no_match_title)
                             .setMessage(getString(reasonStringRes(outcome.reason)))
                             .setPositiveButton(android.R.string.ok, null)
-                            .show()
+                        // The real action goes left and OK last (the repo's dialog convention). Only
+                        // with a connection, like every other way to the review screen.
+                        if (fireflyPrefs.isConfigured()) {
+                            dialog.setNegativeButton(R.string.no_match_create_manually) { _, _ ->
+                                openCreateScreen(CreateTransactionActivity.manualIntent(context, message))
+                            }
+                        }
+                        dialog.show()
                     }
                     is ParseOutcome.Matched -> {
                         val configured = fireflyPrefs.isConfigured()
@@ -592,6 +599,7 @@ class MessagesFragment : Fragment() {
                     DraftIssue.DATE_UNPARSABLE -> getString(R.string.test_match_issue_date_unparsable)
                     DraftIssue.ACCOUNT_SELECTION_REQUIRED -> getString(R.string.test_match_issue_account_selection_required)
                     DraftIssue.ACCOUNT_APPROXIMATE -> getString(R.string.test_match_issue_account_approximate)
+                    DraftIssue.AMOUNT_ENTRY_REQUIRED -> getString(R.string.test_match_issue_amount_entry_required)
                 },
             )
         }

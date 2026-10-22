@@ -30,7 +30,7 @@ fun validateRule(rule: ParseRule): List<String> {
         .onFailure { return errors + "Invalid regular expression: ${it.message}" }
     val declaredGroups = namedGroupNames(rule.pattern)
 
-    if (Groups.AMOUNT !in declaredGroups) {
+    if (Groups.AMOUNT !in declaredGroups && !rule.amountManual) {
         errors += "Pattern must define group '${Groups.AMOUNT}'"
     }
 

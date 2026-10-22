@@ -365,6 +365,10 @@
     <string name="test_match_issue_account_approximate">⚠ Das Konto in dieser Regel ist eine Annahme - automatisches Anlegen wird übersprungen, Duplikate werden ohne Kontovergleich gesucht.</string>
     <string name="rule_field_account_approximate">Konto ist eine Annahme</string>
     <string name="rule_field_account_approximate_hint">Einschalten, wenn die Benachrichtigung nicht sagt, welches Konto oder welche Karte verwendet wurde, und das Konto oben nur geraten ist. Die App legt die Buchung dann nie selbst an, sondern bittet Sie um Prüfung. Außerdem erkennt sie dieselbe Zahlung aus einer App, die das Konto kennt (zum Beispiel Ihrem Wallet), und entfernt ihre eigene Erinnerung. Duplikate werden nur anhand von Betrag und Zeit gefunden.</string>
+    <string name="rule_field_amount_manual">Betrag wird von Hand eingegeben</string>
+    <string name="rule_field_amount_manual_hint">Einschalten für eine Benachrichtigung ohne Betrag, zum Beispiel „Zahlung erhalten“. Das Muster braucht dann keine Betragsgruppe. Die App öffnet die Prüfansicht mit leerem Betrag, und Sie tragen ihn ein. Es wird nichts automatisch angelegt.</string>
+    <string name="test_match_issue_amount_entry_required">⚠ Diese Benachrichtigung enthält keinen Betrag - tragen Sie ihn auf dem nächsten Bildschirm ein.</string>
+    <string name="no_match_create_manually">Manuell anlegen</string>
     <string name="notification_rule_line">Regel: %1$s</string>
     <string name="about_diagnostic_switch">Diagnoseprotokoll führen</string>
     <string name="about_diagnostic_hint">Standardmäßig aus. Beim Ausschalten wird das Protokoll gelöscht. Kopieren Sie es, wenn Sie ein Problem melden.</string>

@@ -179,6 +179,18 @@ rule is only a guess. Turn on **Account is a guess** for such a rule:
   wallet app reports the same payment and knows the real account, the wallet's
   transaction is created and the bank's reminder is removed from the shade.
 
+### Amount is entered by hand
+
+Some notifications carry no amount at all, for example "Payment received" from
+your employer. Turn on **Amount is entered by hand** and the expression does
+not need an `amount` group. When such a message matches, the app opens the
+review screen with the amount empty and the account, category and description
+already filled in. You type the amount and create the transaction. It is never
+created by itself. If the expression does capture an amount, that one is used.
+
+A message that no rule matches can also be made into a transaction by hand:
+tap it and choose **Create manually**.
+
 ### Description, notes, category and tags
 
 <img src="img/rules-editor-templates.png" width="270" alt="The template fields of the rule editor">

@@ -365,6 +365,10 @@
     <string name="test_match_issue_account_approximate">⚠ The account in this rule is a guess - automatic creation is skipped and duplicates are checked without comparing accounts.</string>
     <string name="rule_field_account_approximate">Account is a guess</string>
     <string name="rule_field_account_approximate_hint">Turn this on when the notification does not say which account or card was used, so the account above is only a guess. The app then never creates the transaction by itself: it asks you to review it. It also recognises the same payment reported by another app that knows the account (for example your wallet), and drops its own reminder. Duplicates are found by amount and time only.</string>
+    <string name="rule_field_amount_manual">Amount is entered by hand</string>
+    <string name="rule_field_amount_manual_hint">Turn this on for a notification that does not contain an amount, for example "Payment received". The pattern then does not need an amount group. The app opens the review screen with the amount empty, and you type it in. Nothing is created automatically.</string>
+    <string name="test_match_issue_amount_entry_required">⚠ This notification has no amount - enter it on the next screen.</string>
+    <string name="no_match_create_manually">Create manually</string>
     <string name="notification_rule_line">Rule: %1$s</string>
     <string name="about_diagnostic_switch">Write diagnostic log</string>
     <string name="about_diagnostic_hint">Off by default. Turning it off deletes the log. Copy it when you report a problem.</string>
