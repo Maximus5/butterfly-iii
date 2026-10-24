@@ -63,7 +63,10 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:hint="@string/auto_categories_field_category"
-        app:expandedHintEnabled="false">
+        app:expandedHintEnabled="false"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/ic_dropdown"
+        app:endIconContentDescription="@string/create_tx_pick_category">
 
         <io.github.maximus5.ffnotifyimporter.ui.SuggestAutoCompleteTextView
             android:id="@+id/categoryInput"

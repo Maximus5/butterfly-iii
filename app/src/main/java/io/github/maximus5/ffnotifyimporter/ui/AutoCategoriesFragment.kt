@@ -176,6 +176,23 @@ class AutoCategoriesFragment : Fragment() {
             dialogBinding.categoryInput.setAdapter(SuggestionAdapter(requireContext(), it))
         }
 
+        // The end icon opens the full list of Firefly's categories, same as on the create screen.
+        dialogBinding.categoryLayout.setEndIconOnClickListener {
+            val names = categoryNames?.takeIf { it.isNotEmpty() }
+            if (names == null) {
+                Toast.makeText(requireContext(), R.string.create_tx_no_categories, Toast.LENGTH_LONG).show()
+            } else {
+                val current = dialogBinding.categoryInput.text?.toString()?.trim()
+                AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.create_tx_pick_category)
+                    .setSingleChoiceItems(names.toTypedArray(), names.indexOf(current)) { picker, which ->
+                        dialogBinding.categoryInput.setText(names[which])
+                        picker.dismiss()
+                    }
+                    .show()
+            }
+        }
+
         // "Fill in the category" off: the category is not needed (it stays in the field, greyed out,
         // so switching back does not lose it).
         fun applyActive(active: Boolean) {
